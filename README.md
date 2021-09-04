@@ -14,12 +14,16 @@
 ### method 2 blender python pip install:
 #### from blender console:
 `>>> import sys`
+
 `>>> sys.exec_prefix`
+
 'C:\\Program Files\\Blender Foundation\\Blender 2.92\\2.92\\python'
 
 #### then in a a command prompt (windows):
 `cd C:\\Program Files\\Blender Foundation\\Blender 2.92\\2.92\\python\\bin`
+
 `python.exe -m ensurepip`
+
 `python.exe -m pip install gtts`
 
 ### method 3 blender python install open blender and run:
@@ -40,6 +44,7 @@ subprocess.call([python_exe, "-m", "pip", "install", "gtts"])
 
 ### method 4 blender python install outside of blender (windows):
 `cd C:\Program Files\Blender Foundation\Blender 2.92\2.92\python\Scripts`
+
 `pip.exe install gtts`
 
 ## register the addon from blender by importing the zip method, or run the following script:
