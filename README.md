@@ -52,10 +52,10 @@ subprocess.call([python_exe, "-m", "pip", "install", "gtts"])
 ```
 import os
 
-if os.name == 'nt':
+if os.name == 'nt': # windows
     dir = r'C:\\Users\marco\blender-gtts\blender-gtts.py'
     print(dir)
-else:
+else: # ubuntu and mac os x
     dir = r'/home/magagee/blender-gtts/blender-gtts.py'
     print(dir)
 
