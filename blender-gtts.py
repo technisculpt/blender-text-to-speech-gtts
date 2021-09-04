@@ -3,6 +3,19 @@ import bpy
 from bpy import context
 import os
 
+bl_info = {
+    "name": "Text To Speech",
+    "description": "turns text into speech",
+    "author": "Mark Lagana",
+    "version": (1, 0),
+    "blender": (2, 82, 0),
+    "location": "SEQUENCE_EDITOR > UI > Text To Speech",
+    "warning": "", # used for warning icon and text in addons panel
+    "doc_url": "http://wiki.blender.org/index.php/Extensions:2.6/Py/"
+                "Scripts/My_Script",
+    "support": "TESTING",
+    "category": "Sequencer",
+}
 global count
 count = 0
 
