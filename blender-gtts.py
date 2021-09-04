@@ -14,10 +14,10 @@ else:
     output_dir = r'/tmp/'
 
 class CustomPropertyGroup(bpy.types.PropertyGroup):
-    string_field: bpy.props.StringProperty(name='string field')
+    string_field: bpy.props.StringProperty(name='text')
 
 class TextToSpeech(bpy.types.Panel):
-    bl_space_type = 'VIEW_3D'
+    bl_space_type = 'VIEW_3D'#CLIP_EDITOR
     bl_region_type = 'UI'
     bl_label = 'Text to speech'
     bl_context = 'objectmode'
@@ -40,6 +40,7 @@ class TextToSpeechOperator(bpy.types.Operator):
     
     def execute(self, context):
         global count
+        scene = context.scene
         ttmp3 = gTTS(text=context.scene.custom_props.string_field, lang="en", tld="com.au")
         ttmp3.save(output_dir + str(count) + ".mp3")
         count += 1
@@ -55,6 +56,7 @@ class TextToSpeechOperator(bpy.types.Operator):
 
 def register():
     bpy.utils.register_class(CustomPropertyGroup)
+    bpy.types.Scene.custom_props = bpy.props.PointerProperty(type=CustomPropertyGroup)
     bpy.utils.register_class(TextToSpeech)
     bpy.utils.register_class(TextToSpeechOperator)
 
