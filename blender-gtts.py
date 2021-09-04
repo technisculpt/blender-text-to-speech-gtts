@@ -10,9 +10,8 @@ bl_info = {
     "version": (1, 0),
     "blender": (2, 82, 0),
     "location": "SEQUENCE_EDITOR > UI > Text To Speech",
-    "warning": "", # used for warning icon and text in addons panel
-    "doc_url": "http://wiki.blender.org/index.php/Extensions:2.6/Py/"
-                "Scripts/My_Script",
+    "warning": "",
+    "doc_url": "https://github.com/technisculpt/blender-gtts",
     "support": "TESTING",
     "category": "Sequencer",
 }
