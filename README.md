@@ -6,6 +6,7 @@
 `pip install gtts`
 #### windows:
 `cd C:\Program Files\Blender Foundation\Blender 2.92`
+
 `blender.exe --python-use-system-env`
 #### linux:
 `blender --python-use-system-env`
