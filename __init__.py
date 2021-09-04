@@ -3,6 +3,8 @@ import bpy
 from bpy import context
 import os
 
+
+global count
 count = 0
 
 if os.name == 'nt':
@@ -33,6 +35,7 @@ class TextToSpeechOperator(bpy.types.Operator):
         return context.object is not None
     
     def execute(self, context):
+        global count
         ttmp3 = gTTS(text=context.scene.custom_props, lang="en", tld="com.au")
         ttmp3.save(output_dir + str(count) + ".mp3")
         count += 1
