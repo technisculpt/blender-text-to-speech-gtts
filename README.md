@@ -1,5 +1,5 @@
 # blender-gtts
-### blender wrapper for gtts
+### blender wrapper for gtts (google text to speech)
 
 ## installing gtts:
 ### method 1, system wide pip install:
