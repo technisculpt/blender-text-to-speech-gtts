@@ -2,8 +2,6 @@ from gtts import gTTS
 import bpy
 from bpy import context
 import os
-from importlib import reload
-
 
 global count
 count = 0
@@ -17,11 +15,10 @@ class CustomPropertyGroup(bpy.types.PropertyGroup):
     string_field: bpy.props.StringProperty(name='text')
 
 class TextToSpeech(bpy.types.Panel):
-    bl_space_type = 'VIEW_3D'#CLIP_EDITOR
+    bl_space_type = 'SEQUENCE_EDITOR'
     bl_region_type = 'UI'
     bl_label = 'Text to speech'
-    bl_context = 'objectmode'
-    bl_category = 'View'
+    bl_category = 'Text To Speech'
     
     def draw(self, context):
         layout = self.layout
@@ -30,7 +27,6 @@ class TextToSpeech(bpy.types.Panel):
 
 class TextToSpeechOperator(bpy.types.Operator):
     bl_idname = 'custom.speak'
-    #this is the label that essentially is the text displayed on the button
     bl_label = 'speak op'
     bl_options = {'INTERNAL'}
   
@@ -43,15 +39,16 @@ class TextToSpeechOperator(bpy.types.Operator):
         scene = context.scene
         ttmp3 = gTTS(text=context.scene.custom_props.string_field, lang="en", tld="com.au")
         ttmp3.save(output_dir + str(count) + ".mp3")
-        count += 1
         scene = context.scene
         
         if not scene.sequence_editor:
           scene.sequence_editor_create()
           
-        #Sequences.new_sound(name, filepath, channel, frame_start)    
-        soundstrip = scene.sequence_editor.sequences.new_sound(str(count), output_dir + str(count) + ".mp3", 3, 1)
-        self.report({'INFO'}, "FINISHED")
+        bpy.ops.sequencer.sound_strip_add(  filepath=output_dir + str(count) + ".mp3",
+                                            frame_start=bpy.context.scene.frame_current,
+                                            channel=2)
+        count += 1
+        self.report({'INFO'}, output_dir + str(count) + ".mp3 created")
         return {'FINISHED'}
 
 def register():
