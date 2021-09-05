@@ -1,3 +1,4 @@
+from re import T
 from gtts import gTTS
 import bpy
 from bpy import context
@@ -6,6 +7,8 @@ from bpy_extras.io_utils import ImportHelper
 from pathlib import Path
 from bpy.props import StringProperty, CollectionProperty
 from bpy.types import Operator
+
+DEBUG = True
 
 bl_info = {
     "name": "Text To Speech",
@@ -19,45 +22,115 @@ bl_info = {
     "support": "TESTING",
     "category": "Sequencer",
 }
+
 global count
 count = 0
+
+DEBUG = True
 
 if os.name == 'nt':
     output_dir = r'C:\\tmp\\'
 else:
     output_dir = r'/tmp/'
 
+class Caption():
+
+    def __init__(self, cc_type, name, text, time):
+        self.cc_type = cc_type # 0 : default, 1 : person, 2 : event
+        self.name = name
+        self.text = text
+        self.time = time
+        print(self.cc_type, self.name, self.text)
+
 class ClosedCaptionSet():
+
+    captions = []
+    people = []
 
     def __init__(self, text, filename):
         self.text = text
         self.filename = filename
+
         if self.filename[-3:len(self.filename)] == 'txt':
+            
             print(".txt file detected")
+            self.file_type = 0
+            line_counter = 0
+            cc_text = ""
+            cc_type = 1
+            cc_time = 0
+
+            for line in self.text:
+                if len(line) > 0:
+                    if line[0:2].find('>>') != -1: # person
+                        cc_type = 1
+                        cc_name = line[2:len(line)].split(":")[0]
+                        text_tmp = line[2:len(line)].split(":")[1]
+                        cc_text = text_tmp[1:len(text_tmp)]
+                        
+                        newPerson = True
+                        for person in self.people:
+                            if person == cc_name:
+                                newPerson = False
+                                break
+                        
+                        if newPerson:
+                            self.people.append(cc_name)
+
+                    elif line[0] is '[': # event
+                        cc_type = 2
+                        cc_name = ''
+                        cc_text = line.split('[')[1].split(']')[0]
+                    
+                    else: # plain text line
+
+                        if len(cc_text) == 0: # no previous line
+                            cc_name = ""
+                            cc_type = 0
+                            cc_text = line
+
+                        else: # second line
+                            cc_text += " " + line
+                
+                else: # len(line == 0) equivalent of '\n'
+                    self.captions.append( Caption(cc_type, cc_name, cc_text, cc_time) )
+                    cc_text = ""
+
+                line_counter += 1
+                if line_counter == len(self.text): # on exit
+                    if len(cc_text) > 0:
+                        self.captions.append( Caption(cc_type, cc_name, cc_text, cc_time) )
+            
         elif self.filename[-3:len(self.filename)] == 'srt' and self.text[0][0] is '1' and self.text[1].find('-->') != -1:
             print(".srt file detected")
+            self.file_type = 1
         elif self.filename[-3:len(self.filename)] == 'sbv' and self.text[0].find(',') != -1:
             print(".sbv file detected")
+            self.file_type = 2
         else:
-            print("Please use .txt, .srt or .sbv")
-
+            print("please try .txt, .srt or .sbv file")
+            self.file_type = -1, ''
 
 
 class CustomPropertyGroup(bpy.types.PropertyGroup):
     string_field: bpy.props.StringProperty(name='text')
 
 class ImportTranscript(Operator, ImportHelper):
-    bl_idname = "_import.txt_file"
+    bl_idname = "_import.cc_file"
     bl_label = "Import Some Data"
 
     def execute(self, context):
 
-        f = Path(bpy.path.abspath(self.filepath)) # make a path object of abs path
-        #f = Path(r'C:\Users\marco\blender-gtts\transcript-example.txt')
-        if f.exists():
-            cc = ClosedCaptionSet(f.read_text().split("\n"), self.filepath)
+        if DEBUG:
+            f = Path(bpy.path.abspath(r'C:\Users\marco\blender-gtts\tests\transcript_test.txt'))
+            ClosedCaptionSet(f.read_text().split("\n"), r'C:\Users\marco\blender-gtts\tests\transcript_test.txt')
+            return {'FINISHED'}
 
-        return {'FINISHED'}
+        else:
+            f = Path(bpy.path.abspath(self.filepath))
+            if f.exists():
+                ClosedCaptionSet(f.read_text().split("\n"), self.filepath)
+                return {'FINISHED'}
 
 class TextToSpeech(bpy.types.Panel):
     bl_space_type = 'SEQUENCE_EDITOR'
@@ -114,7 +187,7 @@ class LoadFileOperator(bpy.types.Operator):
         return context.object is not None
     
     def execute(self, context):
-        bpy.ops._import.txt_file('INVOKE_DEFAULT')
+        bpy.ops._import.cc_file('INVOKE_DEFAULT')
         self.report({'INFO'}, "done")
         return {'FINISHED'}
 
@@ -194,7 +267,7 @@ strip.
           speed_factor
           strip_elem_from_frame(
           swap(
-          type
+          cc_type
           type_recast(
           update(
           use_cache_composite
