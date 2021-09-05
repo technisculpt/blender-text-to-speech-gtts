@@ -27,6 +27,22 @@ if os.name == 'nt':
 else:
     output_dir = r'/tmp/'
 
+class ClosedCaptionSet():
+
+    def __init__(self, text, filename):
+        self.text = text
+        self.filename = filename
+        if self.filename[-3:len(self.filename)] == 'txt':
+            print(".txt file detected")
+        elif self.filename[-3:len(self.filename)] == 'srt' and self.text[0][0] is '1' and self.text[1].find('-->') != -1:
+            print(".srt file detected")
+        elif self.filename[-3:len(self.filename)] == 'sbv' and self.text[0].find(',') != -1:
+            print(".sbv file detected")
+        else:
+            print("Please use .txt, .srt or .sbv")
+
+
+
 class CustomPropertyGroup(bpy.types.PropertyGroup):
     string_field: bpy.props.StringProperty(name='text')
 
@@ -34,25 +50,13 @@ class ImportTranscript(Operator, ImportHelper):
     bl_idname = "_import.txt_file"
     bl_label = "Import Some Data"
 
-    # ImportHelper mixin class uses this
-    filename_ext = ".txt"
-
-    filter_glob = StringProperty(
-            default="*.txt",
-            options={'HIDDEN'},
-            )
-
-    filename = StringProperty(maxlen=1024)
-    directory = StringProperty(maxlen=1024)
-
     def execute(self, context):
 
-        #f = Path(bpy.path.abspath(self.filepath)) # make a path object of abs path
-        f = Path(r'C:\Users\marco\blender-gtts\transcript-example.txt')
+        f = Path(bpy.path.abspath(self.filepath)) # make a path object of abs path
+        #f = Path(r'C:\Users\marco\blender-gtts\transcript-example.txt')
         if f.exists():
-            text = f.read_text()
-            lines = text.split("\n")
-            print(lines)
+            cc = ClosedCaptionSet(f.read_text().split("\n"), self.filepath)
+
         return {'FINISHED'}
 
 class TextToSpeech(bpy.types.Panel):
@@ -90,9 +94,10 @@ class TextToSpeechOperator(bpy.types.Operator):
         bpy.ops.sequencer.sound_strip_add(  filepath=output_dir + str(count) + ".mp3",
                                             frame_start=bpy.context.scene.frame_current,
                                             channel=2)
-        for strip in seq.sequences_all:
+
+        #for strip in seq.sequences_all:
             #print(strip.name)
-            print(strip.frame_start)
+            #print(strip.frame_start)
             #strip.show_waveform = True
 
         count += 1
