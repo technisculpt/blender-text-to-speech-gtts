@@ -25,8 +25,6 @@ bl_info = {
     "category": "Sequencer",
 }
 
-global count
-count = 0
 
 DEBUG = False
 
@@ -34,6 +32,35 @@ if os.name == 'nt':
     output_dir = r'C:\\tmp\\'
 else:
     output_dir = r'/tmp/'
+
+def sound_strip_from_text(tts, start_frame, language="en", top_level_domain="com.au"):
+
+    if os.name == 'nt':
+        output_name = output_dir + '\\' + tts + ".mp3"
+    else:
+        output_name = output_dir +  '/' + tts + ".mp3"
+
+    ttmp3 = gTTS(text=tts, lang=language, tld=top_level_domain)
+    ttmp3.save(output_name)
+    scene = context.scene
+    
+    if not scene.sequence_editor:
+        scene.sequence_editor_create()
+    seq = scene.sequence_editor
+
+    bpy.ops.sequencer.sound_strip_add(  filepath=output_name,
+                                        frame_start=start_frame,
+                                        channel=2, )
+
+    obj = ''
+    for strip in seq.sequences_all:
+        if strip.name.find(tts + '.mp3') != -1:
+            obj = strip
+            break
+
+    #obj.pitch = 0.85
+
+    return obj
 
 class Time():
 
@@ -43,8 +70,12 @@ class Time():
         self.seconds = seconds
         self.milliseconds = milliseconds
 
-    def timeToStr(self):
-        return (str(self.hours) + ' ' + str(self.minutes) + ' ' + str(self.seconds) + ' ' + str(self.milliseconds))
+    def time_to_frame(self):
+        if self.hours == -1:
+            return 0
+        else:
+            total_seconds = self.hours * 3600 + self.minutes * 60 + self.seconds + self.milliseconds/1000
+        return total_seconds * bpy.context.scene.render.fps
 
 class Caption():
 
@@ -54,7 +85,8 @@ class Caption():
         self.text = text
         self.start_time = start_time
         self.end_time = end_time
-        print(self.cc_type, self.name, self.text, self.start_time.timeToStr(), self.end_time.timeToStr())
+        self.frame_start = start_time.time_to_frame()
+        sound_strip_from_text(text, self.frame_start)
 
 class ClosedCaptionSet():
 
@@ -296,9 +328,9 @@ class TextToSpeech(bpy.types.Panel):
     
     def draw(self, context):
         layout = self.layout
-        layout.operator('custom.speak', text = 'speak')
+        layout.operator('custom.speak', text = 'add caption')
         layout.prop(context.scene.custom_props, 'string_field')
-        layout.operator('custom.load', text = 'load file')
+        layout.operator('custom.load', text = 'load captions file')
 
 class TextToSpeechOperator(bpy.types.Operator):
     bl_idname = 'custom.speak'
@@ -312,25 +344,13 @@ class TextToSpeechOperator(bpy.types.Operator):
     def execute(self, context):
         global count
         scene = context.scene
-        ttmp3 = gTTS(text=context.scene.custom_props.string_field, lang="en", tld="com.au")
-        ttmp3.save(output_dir + str(count) + ".mp3")
-        scene = context.scene
+
         
-        if not scene.sequence_editor:
-          scene.sequence_editor_create()
-        seq = scene.sequence_editor
+        sound_strip_from_text(context.scene.custom_props.string_field, bpy.context.scene.frame_current)
 
-        bpy.ops.sequencer.sound_strip_add(  filepath=output_dir + str(count) + ".mp3",
-                                            frame_start=bpy.context.scene.frame_current,
-                                            channel=2 )
+ 
 
-        for strip in seq.sequences_all:
-            print(strip.frame_duration)
-            #print(strip.frame_start)
-            #strip.show_waveform = True
-
-        count += 1
-        self.report({'INFO'}, output_dir + str(count) + ".mp3 created")
+        self.report({'INFO'}, "FINISHED")
         return {'FINISHED'}
 
 class LoadFileOperator(bpy.types.Operator):
@@ -433,4 +453,108 @@ strip.
           use_linear_modifiers
           values(
           volume
+
+Local accent
+
+Language code (lang)
+
+Top-level domain (tld)
+
+English (Australia)
+
+en
+
+com.au
+
+English (United Kingdom)
+
+en
+
+co.uk
+
+English (United States)
+
+en
+
+com (default)
+
+English (Canada)
+
+en
+
+ca
+
+English (India)
+
+en
+
+co.in
+
+English (Ireland)
+
+en
+
+ie
+
+English (South Africa)
+
+en
+
+co.za
+
+French (Canada)
+
+fr
+
+ca
+
+French (France)
+
+fr
+
+fr
+
+Mandarin (China Mainland)
+
+zh-CN
+
+any
+
+Mandarin (Taiwan)
+
+zh-TW
+
+any
+
+Portuguese (Brazil)
+
+pt
+
+com.br
+
+Portuguese (Portugal)
+
+pt
+
+pt
+
+Spanish (Mexico)
+
+es
+
+com.mx
+
+Spanish (Spain)
+
+es
+
+es
+
+Spanish (United States)
+
+es
+
+com (default)
+
+
 '''
