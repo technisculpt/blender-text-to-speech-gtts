@@ -10,8 +10,6 @@ from bpy.props import StringProperty, CollectionProperty
 from bpy.types import Operator
 from datetime import datetime
 
-DEBUG = True
-
 bl_info = {
     "name": "Text To Speech",
     "description": "turns text into speech",
@@ -25,8 +23,7 @@ bl_info = {
     "category": "Sequencer",
 }
 
-
-DEBUG = False
+DEBUG = True
 
 if os.name == 'nt':
     output_dir = r'C:\\tmp\\'
@@ -54,7 +51,7 @@ def sound_strip_from_text(tts, start_frame, language="en", top_level_domain="com
 
     obj = ''
     for strip in seq.sequences_all:
-        if strip.name.find(tts + '.mp3') != -1:
+        if output_name.find(strip.name) != -1:
             obj = strip
             break
 
@@ -72,7 +69,7 @@ class Time():
 
     def time_to_frame(self):
         if self.hours == -1:
-            return 0
+            return self.hours
         else:
             total_seconds = self.hours * 3600 + self.minutes * 60 + self.seconds + self.milliseconds/1000
         return total_seconds * bpy.context.scene.render.fps
@@ -80,18 +77,33 @@ class Time():
 class Caption():
 
     def __init__(self, cc_type, name, text, start_time, end_time):
+        self.rearrange = False
         self.cc_type = cc_type # 0 : default, 1 : person, 2 : event
         self.name = name
         self.text = text
         self.start_time = start_time
         self.end_time = end_time
         self.frame_start = start_time.time_to_frame()
-        sound_strip_from_text(text, self.frame_start)
+        if self.frame_start != -1:
+            self.sound_strip = sound_strip_from_text(text, self.frame_start)
+        else:
+            self.sound_strip = sound_strip_from_text(text, 0)
 
 class ClosedCaptionSet():
 
     captions = []
     people = []
+
+    def arrange_captions_by_time(self):
+        
+        frame_pointer = 0
+        for caption in range(len(self.captions)):
+
+            if caption > 0:
+
+                self.captions[caption].sound_strip.frame_start = frame_pointer
+
+            frame_pointer += self.captions[caption].sound_strip.frame_duration
 
     def __init__(self, text, filename):
         self.text = text
@@ -146,6 +158,8 @@ class ClosedCaptionSet():
                 if line_counter == len(self.text): # on exit
                     if len(cc_text) > 0:
                         self.captions.append( Caption(cc_type, cc_name, cc_text, Time(-1, -1, -1, -1), Time(-1, -1, -1, -1)) )
+
+            self.arrange_captions_by_time()
             
         elif self.filename[-3:len(self.filename)] == 'srt' and self.text[0][0] == '1' and self.text[1].find('-->') != -1:
             
@@ -309,7 +323,7 @@ class ImportTranscript(Operator, ImportHelper):
     def execute(self, context):
 
         if DEBUG:
-            test_file = r'C:\Users\marco\blender-gtts\tests\transcript_test.sbv'
+            test_file = r'C:\Users\marco\blender-gtts\tests\transcript_test.txt'
             f = Path(bpy.path.abspath(test_file))
             ClosedCaptionSet(f.read_text().split("\n"), test_file)
             return {'FINISHED'}
