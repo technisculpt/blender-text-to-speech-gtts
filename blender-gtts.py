@@ -1,3 +1,4 @@
+from numbers import Number
 from re import T
 from gtts import gTTS
 import bpy
@@ -7,6 +8,7 @@ from bpy_extras.io_utils import ImportHelper
 from pathlib import Path
 from bpy.props import StringProperty, CollectionProperty
 from bpy.types import Operator
+from datetime import datetime
 
 DEBUG = True
 
@@ -33,14 +35,26 @@ if os.name == 'nt':
 else:
     output_dir = r'/tmp/'
 
+class Time():
+
+    def __init__(self, hours, minutes, seconds, milliseconds):
+        self.hours = hours
+        self.minutes = minutes
+        self.seconds = seconds
+        self.milliseconds = milliseconds
+
+    def timeToStr(self):
+        return (str(self.hours) + ' ' + str(self.minutes) + ' ' + str(self.seconds) + ' ' + str(self.milliseconds))
+
 class Caption():
 
-    def __init__(self, cc_type, name, text, time):
+    def __init__(self, cc_type, name, text, start_time, end_time):
         self.cc_type = cc_type # 0 : default, 1 : person, 2 : event
         self.name = name
         self.text = text
-        self.time = time
-        print(self.cc_type, self.name, self.text)
+        self.start_time = start_time
+        self.end_time = end_time
+        print(self.cc_type, self.name, self.text, self.start_time.timeToStr(), self.end_time.timeToStr())
 
 class ClosedCaptionSet():
 
@@ -58,7 +72,6 @@ class ClosedCaptionSet():
             line_counter = 0
             cc_text = ""
             cc_type = 1
-            cc_time = 0
 
             for line in self.text:
                 if len(line) > 0:
@@ -85,7 +98,7 @@ class ClosedCaptionSet():
                     else: # plain text line
 
                         if len(cc_text) == 0: # no previous line
-                            cc_name = ""
+                            cc_name = "noname"
                             cc_type = 0
                             cc_text = line
 
@@ -93,17 +106,85 @@ class ClosedCaptionSet():
                             cc_text += " " + line
                 
                 else: # len(line == 0) equivalent of '\n'
-                    self.captions.append( Caption(cc_type, cc_name, cc_text, cc_time) )
+                    self.captions.append( Caption(cc_type, cc_name, cc_text, 0, 0) )
                     cc_text = ""
 
                 line_counter += 1
                 if line_counter == len(self.text): # on exit
                     if len(cc_text) > 0:
-                        self.captions.append( Caption(cc_type, cc_name, cc_text, cc_time) )
+                        self.captions.append( Caption(cc_type, cc_name, cc_text, 0, 0) )
             
         elif self.filename[-3:len(self.filename)] == 'srt' and self.text[0][0] is '1' and self.text[1].find('-->') != -1:
+            
             print(".srt file detected")
             self.file_type = 1
+            line_counter = 0
+            cc_text = ""
+            cc_type = 1
+            cc_time = 0
+            start_time = 0
+            end_time = 0
+
+            for line in self.text:
+
+                if len(line) > 0:
+
+                    if line.find('-->') != -1 and line[0].isnumeric: # timecode
+                        start = line.split("-->")[0]
+                        end = line.split("-->")[1]
+                        hrs_start = int(start.split(":")[0])
+                        min_start = int(start.split(":")[1])
+                        sec_start = int(start.split(":")[2].split(',')[0])
+                        ms_start = int(start.split(":")[2].split(',')[1])
+
+                        hrs_end = int(end.split(":")[0])
+                        min_end = int(end.split(":")[1])
+                        sec_end = int(end.split(":")[2].split(',')[0])
+                        ms_end = int(end.split(":")[2].split(',')[1])
+
+                        start_time = Time(hrs_start, min_start, sec_start, ms_start)
+                        end_time = Time(hrs_end, min_end, sec_end, ms_end)
+
+                    elif line[0:2].find('>>') != -1: # person
+                        cc_type = 1
+                        cc_name = line[2:len(line)].split(":")[0]
+                        text_tmp = line[2:len(line)].split(":")[1]
+                        cc_text = text_tmp[1:len(text_tmp)]
+                        
+                        newPerson = True
+                        for person in self.people:
+                            if person == cc_name:
+                                newPerson = False
+                                break
+                        
+                        if newPerson:
+                            self.people.append(cc_name)
+
+                    elif line[0] is '[': # event
+                        cc_type = 2
+                        cc_name = ''
+                        cc_text = line.split('[')[1].split(']')[0]
+                    
+                    elif(len(line) > 1): # plain text line
+                        
+                        if len(cc_text) == 0: # no previous line
+                            cc_name = "noname"
+                            cc_type = 0
+                            cc_text = line
+
+                            
+                        else: # second line
+                            cc_text += " " + line
+
+                else: # len(line == 0) equivalent of '\n'
+                    self.captions.append( Caption(cc_type, cc_name, cc_text, start_time, end_time) )
+                    cc_text = ""
+
+                line_counter += 1
+                if line_counter == len(self.text): # on exit
+                    if len(cc_text) > 0:
+                        self.captions.append( Caption(cc_type, cc_name, cc_text, start_time, end_time) )
+
         elif self.filename[-3:len(self.filename)] == 'sbv' and self.text[0].find(',') != -1:
             print(".sbv file detected")
             self.file_type = 2
@@ -122,8 +203,9 @@ class ImportTranscript(Operator, ImportHelper):
     def execute(self, context):
 
         if DEBUG:
-            f = Path(bpy.path.abspath(r'C:\Users\marco\blender-gtts\tests\transcript_test.txt'))
-            ClosedCaptionSet(f.read_text().split("\n"), r'C:\Users\marco\blender-gtts\tests\transcript_test.txt')
+            test_file = r'C:\Users\marco\blender-gtts\tests\transcript_test.srt'
+            f = Path(bpy.path.abspath(test_file))
+            ClosedCaptionSet(f.read_text().split("\n"), test_file)
             return {'FINISHED'}
 
         else:
@@ -166,10 +248,10 @@ class TextToSpeechOperator(bpy.types.Operator):
 
         bpy.ops.sequencer.sound_strip_add(  filepath=output_dir + str(count) + ".mp3",
                                             frame_start=bpy.context.scene.frame_current,
-                                            channel=2)
+                                            channel=2 )
 
-        #for strip in seq.sequences_all:
-            #print(strip.name)
+        for strip in seq.sequences_all:
+            print(strip.frame_duration)
             #print(strip.frame_start)
             #strip.show_waveform = True
 
