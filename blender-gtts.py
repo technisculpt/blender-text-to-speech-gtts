@@ -28,7 +28,7 @@ bl_info = {
 global count
 count = 0
 
-DEBUG = True
+DEBUG = False
 
 if os.name == 'nt':
     output_dir = r'C:\\tmp\\'
@@ -64,10 +64,11 @@ class ClosedCaptionSet():
     def __init__(self, text, filename):
         self.text = text
         self.filename = filename
+        self.file_type = -1
 
         if self.filename[-3:len(self.filename)] == 'txt':
             
-            print(".txt file detected") ##### text file parsing #####
+            print(".txt file detected")
             self.file_type = 0
             line_counter = 0
             cc_text = ""
@@ -90,7 +91,7 @@ class ClosedCaptionSet():
                         if newPerson:
                             self.people.append(cc_name)
 
-                    elif line[0] is '[': # event
+                    elif line[0] == '[': # event
                         cc_type = 2
                         cc_name = ''
                         cc_text = line.split('[')[1].split(']')[0]
@@ -106,18 +107,17 @@ class ClosedCaptionSet():
                             cc_text += " " + line
                 
                 else: # len(line == 0) equivalent of '\n'
-                    self.captions.append( Caption(cc_type, cc_name, cc_text, 0, 0) )
+                    self.captions.append( Caption(cc_type, cc_name, cc_text, Time(-1, -1, -1, -1), Time(-1, -1, -1, -1)) )
                     cc_text = ""
 
                 line_counter += 1
                 if line_counter == len(self.text): # on exit
                     if len(cc_text) > 0:
-                        self.captions.append( Caption(cc_type, cc_name, cc_text, 0, 0) )
+                        self.captions.append( Caption(cc_type, cc_name, cc_text, Time(-1, -1, -1, -1), Time(-1, -1, -1, -1)) )
             
-        elif self.filename[-3:len(self.filename)] == 'srt' and self.text[0][0] is '1' and self.text[1].find('-->') != -1:
+        elif self.filename[-3:len(self.filename)] == 'srt' and self.text[0][0] == '1' and self.text[1].find('-->') != -1:
             
-            print(".srt file detected") ##### srt file parsing #####
-            self.file_type = 1
+            print(".srt file detected")
             line_counter = 0
             cc_text = ""
             cc_type = 1
@@ -160,7 +160,7 @@ class ClosedCaptionSet():
                         if newPerson:
                             self.people.append(cc_name)
 
-                    elif line[0] is '[': # event
+                    elif line[0] == '[': # event
                         cc_type = 2
                         cc_name = ''
                         cc_text = line.split('[')[1].split(']')[0]
@@ -187,7 +187,7 @@ class ClosedCaptionSet():
 
         elif self.filename[-3:len(self.filename)] == 'sbv' and self.text[0].find(',') != -1:
             
-            print(".sbv file detected") ##### sbv file parsing #####
+            print(".sbv file detected")
             self.file_type = 1
             line_counter = 0
             cc_text = ""
@@ -233,7 +233,7 @@ class ClosedCaptionSet():
                         if newPerson:
                             self.people.append(cc_name)
 
-                    elif line[0] is '[': # event
+                    elif line[0] == '[': # event
                         cc_type = 2
                         cc_name = ''
                         cc_text = line.split('[')[1].split(']')[0]
@@ -262,6 +262,9 @@ class ClosedCaptionSet():
 
         else:
             print("please try .txt, .srt or .sbv file")
+        
+        if (self.file_type != -1):
+            print("ok")
 
 
 class CustomPropertyGroup(bpy.types.PropertyGroup):
