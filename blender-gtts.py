@@ -10,6 +10,11 @@ from bpy.props import StringProperty, CollectionProperty
 from bpy.types import Operator
 from datetime import datetime
 
+global global_captions
+global_captions = []
+
+DEBUG = True
+
 bl_info = {
     "name": "Text To Speech",
     "description": "turns text into speech",
@@ -23,12 +28,19 @@ bl_info = {
     "category": "Sequencer",
 }
 
-DEBUG = True
-
 if os.name == 'nt':
     output_dir = r'C:\\tmp\\'
 else:
     output_dir = r'/tmp/'
+
+class CustomPropertyGroup(bpy.types.PropertyGroup):
+    string_field: bpy.props.StringProperty(name='text')
+    
+class ExportOptions(bpy.types.PropertyGroup):
+    mode_enumerator : bpy.props.EnumProperty(
+                    name = "",
+                    description = "export options for closed captions",
+                    items=[('0',"txt",""),('1',"srt",""),('2',"srb","")])
 
 def sound_strip_from_text(tts, start_frame, language="en", top_level_domain="com.au"):
 
@@ -93,6 +105,12 @@ class ClosedCaptionSet():
 
     captions = []
     people = []
+
+    def export_cc(self, type, output):
+        print(bpy.context.scene.render.filepath)
+
+    def return_objects(self):
+        return self.captions
 
     def arrange_captions_by_time(self):
         
@@ -312,20 +330,18 @@ class ClosedCaptionSet():
         if (self.file_type != -1):
             print("ok")
 
-
-class CustomPropertyGroup(bpy.types.PropertyGroup):
-    string_field: bpy.props.StringProperty(name='text')
-
 class ImportTranscript(Operator, ImportHelper):
     bl_idname = "_import.cc_file"
     bl_label = "Import Some Data"
 
     def execute(self, context):
+        global global_captions
 
         if DEBUG:
             test_file = r'C:\Users\marco\blender-gtts\tests\transcript_test.txt'
             f = Path(bpy.path.abspath(test_file))
-            ClosedCaptionSet(f.read_text().split("\n"), test_file)
+            ccs = ClosedCaptionSet(f.read_text().split("\n"), test_file)
+            global_captions = ccs.return_objects()
             return {'FINISHED'}
 
         else:
@@ -342,9 +358,19 @@ class TextToSpeech(bpy.types.Panel):
     
     def draw(self, context):
         layout = self.layout
-        layout.operator('custom.speak', text = 'add caption')
+        col = layout.column()
+        col.label(text="Add Caption:")
         layout.prop(context.scene.custom_props, 'string_field')
+        layout.operator('custom.speak', text = 'add caption')
+        col = layout.column()
+        col.label(text="Load Captions:")
         layout.operator('custom.load', text = 'load captions file')
+
+        col = layout.column()
+        col.label(text="Export Captions:")
+        subrow = layout.row(align=True)
+        subrow.prop(context.scene.export_options, 'mode_enumerator')
+        subrow.operator('custom.export', text = 'export')
 
 class TextToSpeechOperator(bpy.types.Operator):
     bl_idname = 'custom.speak'
@@ -356,14 +382,8 @@ class TextToSpeechOperator(bpy.types.Operator):
         return context.object is not None
     
     def execute(self, context):
-        global count
         scene = context.scene
-
-        
         sound_strip_from_text(context.scene.custom_props.string_field, bpy.context.scene.frame_current)
-
- 
-
         self.report({'INFO'}, "FINISHED")
         return {'FINISHED'}
 
@@ -381,92 +401,59 @@ class LoadFileOperator(bpy.types.Operator):
         self.report({'INFO'}, "done")
         return {'FINISHED'}
 
+class ExportFileOperator(bpy.types.Operator):
+    bl_idname = 'custom.export'
+    bl_label = 'load op'
+    bl_options = {'INTERNAL'}
+  
+    @classmethod
+    def poll(cls, context):
+        return context.object is not None
+    
+    def execute(self, context):
+
+        global global_captions
+
+        mode = context.scene.export_options.mode_enumerator
+        if mode is '0': # txt file
+            for caption in global_captions:
+                print(caption.name)
+        #elif mode is '1': # srt file 
+            #print("srt")
+        #else: # srb file
+            #print("srb") 
+
+        self.report({'INFO'}, "done")
+        return {'FINISHED'}
+
 def register():
     bpy.utils.register_class(CustomPropertyGroup)
     bpy.types.Scene.custom_props = bpy.props.PointerProperty(type=CustomPropertyGroup)
+    bpy.utils.register_class(ExportOptions)
+    bpy.types.Scene.export_options = bpy.props.PointerProperty(type=ExportOptions)
     bpy.utils.register_class(TextToSpeech)
     bpy.utils.register_class(TextToSpeechOperator)
     bpy.utils.register_class(LoadFileOperator)
+    bpy.utils.register_class(ExportFileOperator)
     bpy.utils.register_class(ImportTranscript)
 
 def unregister():
     del bpy.types.Scene.custom_props
-    bpy.utils.register_class(CustomPropertyGroup)
+    del bpy.types.Scene.export_options
+    bpy.utils.unregister_class(CustomPropertyGroup)
     bpy.utils.unregister_class(TextToSpeech)
     bpy.utils.unregister_class(TextToSpeechOperator)     
-    bpy.utils.unregister_class(LoadFileOperator)  
+    bpy.utils.unregister_class(LoadFileOperator)
     bpy.utils.unregister_class(ImportTranscript)
+    bpy.utils.unregister_class(ExportFileOperator)
+    bpy.utils.unregister_class(ExportOptions)
+    
 
 if __name__ == '__main__':
     register()
 
 
 '''
-strip.
-          animation_offset_end
-          animation_offset_start
-          as_pointer(
-          bl_rna
-          bl_rna_get_subclass(
-          bl_rna_get_subclass_py(
-          blend_alpha
-          blend_type
-          channel
-          driver_add(
-          driver_remove(
-          effect_fader
-          frame_duration
-          frame_final_duration
-          frame_final_end
-          frame_final_start
-          frame_offset_end
-          frame_offset_start
-          frame_start
-          frame_still_end
-          frame_still_start
-          get(
-          id_data
-          invalidate_cache(
-          is_property_hidden(
-          is_property_overridable_library(
-          is_property_readonly(
-          is_property_set(
-          items(
-          keyframe_delete(
-          keyframe_insert(
-          keys(
-          lock
-          modifiers
-          move_to_meta(
-          mute
-          name
-          override_cache_settings
-          pan
-          path_from_id(
-          path_resolve(
-          pitch
-          pop(
-          property_overridable_library_set(
-          property_unset(
-          rna_type
-          select
-          select_left_handle
-          select_right_handle
-          show_waveform
-          sound
-          speed_factor
-          strip_elem_from_frame(
-          swap(
-          cc_type
-          type_recast(
-          update(
-          use_cache_composite
-          use_cache_preprocessed
-          use_cache_raw
-          use_default_fade
-          use_linear_modifiers
-          values(
-          volume
 
 Local accent
 
