@@ -48,17 +48,15 @@ subprocess.call([python_exe, "-m", "pip", "install", "gtts"])
 
 `pip.exe install gtts`
 
-## register the addon from blender by importing the zip method, or run the following script:
+## register the addon from blender in preferences->addons, or run the following script:
 
 ```
 import os
 
 if os.name == 'nt': # windows
     dir = r'C:\\Users\marco\blender-gtts\blender-gtts.py'
-    print(dir)
-else: # ubuntu and mac os x
+else: # linux and mac os x
     dir = r'/home/magagee/blender-gtts/blender-gtts.py'
-    print(dir)
 
 exec(compile(open(dir).read(), dir, 'exec'))
 ```
