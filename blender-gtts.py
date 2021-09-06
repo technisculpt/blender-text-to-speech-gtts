@@ -102,7 +102,7 @@ class Caption():
             self.sound_strip = sound_strip_from_text(text, 0)
 
 
-class ClosedCaptionSet():
+class ClosedCaptionSet(): # translates cc files into a list of Captions
 
     captions = []
     people = []
@@ -420,6 +420,7 @@ class ExportFileOperator(bpy.types.Operator):
         global global_captions
 
         mode = context.scene.export_options.mode_enumerator
+        
         if mode is '0': # txt file
 
             try:
@@ -447,9 +448,9 @@ class ExportFileOperator(bpy.types.Operator):
             f.close()
                 #print(bpy.context.scene.render.filepath)
 
-        #elif mode is '1': # srt file 
+        #elif mode is '1': # TODO srt
             #print("srt")
-        #else: # srb file
+        #else: # TODO srb
             #print("srb") 
 
         self.report({'INFO'}, "done")
@@ -476,13 +477,14 @@ def unregister():
     bpy.utils.unregister_class(ImportTranscript)
     bpy.utils.unregister_class(ExportFileOperator)
     bpy.utils.unregister_class(ExportOptions)
-    
 
 if __name__ == '__main__':
     register()
 
 
 '''
+TODO translations,
+TODO accents,
 
 Local accent
 
