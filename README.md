@@ -9,7 +9,7 @@
 
 ## installing gtts:
 
-### You will need to install gtts. Your options are to install python, pip and gtts and run blender using the system python environment, or to install or within blenders python environment
+### You will need to install gtts. Your options are to install python, pip and gtts and run blender using the system python environment, or to install gtts within blenders python environment
 
 ### method 1, system wide:
 `pip install gtts`
@@ -23,7 +23,7 @@
 ### If it worked you should be able to open a python console from within blender and not recieve an error when typing:
 `import gtts`
 
-### method 2 blender python pip install:'
+### method 2 blender python pip install:
 #### open blender and run the following script
 ```
 import subprocess
