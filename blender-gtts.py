@@ -324,9 +324,6 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
 
         else:
             print("please try .txt, .srt or .sbv file")
-        
-        if (self.file_type != -1):
-            print("ok")
 
 class ImportTranscript(Operator, ImportHelper):
     bl_idname = "_import.cc_file"
@@ -384,9 +381,7 @@ class TextToSpeechOperator(bpy.types.Operator):
     def execute(self, context):
         global global_captions
         seconds = bpy.context.scene.frame_current / bpy.context.scene.render.fps
-        bpy.context.scene.render.fps
         global_captions.append(Caption(0, '', context.scene.custom_props.string_field, Time(0, 0, seconds, 0), Time(-1, -1, -1, -1)))
-
         self.report({'INFO'}, "FINISHED")
         return {'FINISHED'}
 
