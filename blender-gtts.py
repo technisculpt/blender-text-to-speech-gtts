@@ -8,7 +8,7 @@ from bpy_extras.io_utils import ImportHelper
 from pathlib import Path
 from bpy.props import StringProperty, CollectionProperty
 from bpy.types import Operator
-from datetime import datetime
+from datetime import date, datetime
 
 global global_captions
 global_captions = []
@@ -101,13 +101,11 @@ class Caption():
         else:
             self.sound_strip = sound_strip_from_text(text, 0)
 
+
 class ClosedCaptionSet():
 
     captions = []
     people = []
-
-    def export_cc(self, type, output):
-        print(bpy.context.scene.render.filepath)
 
     def return_objects(self):
         return self.captions
@@ -341,13 +339,14 @@ class ImportTranscript(Operator, ImportHelper):
             test_file = r'C:\Users\marco\blender-gtts\tests\transcript_test.txt'
             f = Path(bpy.path.abspath(test_file))
             ccs = ClosedCaptionSet(f.read_text().split("\n"), test_file)
-            global_captions = ccs.return_objects()
+            global_captions += ccs.return_objects()
             return {'FINISHED'}
 
         else:
             f = Path(bpy.path.abspath(self.filepath))
             if f.exists():
-                ClosedCaptionSet(f.read_text().split("\n"), self.filepath)
+                ccs =  ClosedCaptionSet(f.read_text().split("\n"), self.filepath)
+                global_captions += ccs.return_objects()
                 return {'FINISHED'}
 
 class TextToSpeech(bpy.types.Panel):
@@ -382,8 +381,11 @@ class TextToSpeechOperator(bpy.types.Operator):
         return context.object is not None
     
     def execute(self, context):
-        scene = context.scene
-        sound_strip_from_text(context.scene.custom_props.string_field, bpy.context.scene.frame_current)
+        global global_captions
+        seconds = bpy.context.scene.frame_current / bpy.context.scene.render.fps
+        bpy.context.scene.render.fps
+        global_captions.append(Caption(0, '', context.scene.custom_props.string_field, Time(0, 0, seconds, 0), Time(-1, -1, -1, -1)))
+
         self.report({'INFO'}, "FINISHED")
         return {'FINISHED'}
 
@@ -416,8 +418,32 @@ class ExportFileOperator(bpy.types.Operator):
 
         mode = context.scene.export_options.mode_enumerator
         if mode is '0': # txt file
-            for caption in global_captions:
-                print(caption.name)
+
+            try:
+                f = open(bpy.context.scene.render.filepath + "\captions_" +  datetime.today().strftime('%Y-%m-%d') + ".txt", "x")
+            except:
+                f = open(bpy.context.scene.render.filepath + "\captions_" +  datetime.today().strftime('%Y-%m-%d') + ".txt", "w")
+
+            for caption in range(len(global_captions)):
+
+                if global_captions[caption].cc_type == 0: # default text
+
+                    f.write(global_captions[caption].text + '\n')
+
+                elif global_captions[caption].cc_type == 1: # person
+
+                    f.write(">> " + global_captions[caption].name + ': ' + global_captions[caption].text + '\n')
+
+                elif global_captions[caption].cc_type == 2: # event
+
+                    f.write('[' + global_captions[caption].text + ']\n' )
+
+                if caption < len(global_captions):
+                    f.write('\n')
+
+            f.close()
+                #print(bpy.context.scene.render.filepath)
+
         #elif mode is '1': # srt file 
             #print("srt")
         #else: # srb file
