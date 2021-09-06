@@ -1,32 +1,30 @@
 # blender-gtts
 ### blender wrapper for gtts (google text to speech)
+### make audio captions quickly
+### convert closed captions files to audio
+### support included for .srt, .srb and .txt files
+### .txt files with no timecodes will sort the audio strips based on length
+
 ![alt text](https://github.com/technisculpt/blender-gtts/blob/main/preview.png)
+
 ## installing gtts:
-### method 1, system wide pip install:
+
+### You will need to install gtts. Your options are to install python, pip and gtts and run blender using the system python environment, or to install or within blenders python environment
+
+### method 1, system wide:
 `pip install gtts`
-#### windows:
+#### windows, locate app:
 `cd C:\Program Files\Blender Foundation\Blender 2.93`
 
 `blender.exe --python-use-system-env`
 #### linux:
 `blender --python-use-system-env`
 
-### method 2 blender python pip install:
-#### from blender console:
-`>>> import sys`
+### If it worked you should be able to open a python console from within blender and not recieve an error when typing:
+`import gtts`
 
-`>>> sys.exec_prefix`
-
-'C:\\Program Files\\Blender Foundation\\Blender 2.92\\2.92\\python'
-
-#### then in a a command prompt (windows):
-`cd C:\\Program Files\\Blender Foundation\\Blender 2.92\\2.92\\python\\bin`
-
-`python.exe -m ensurepip`
-
-`python.exe -m pip install gtts`
-
-### method 3 blender python install open blender and run:
+### method 2 blender python pip install:'
+#### open blender and run the following script
 ```
 import subprocess
 import sys
@@ -43,12 +41,32 @@ subprocess.call([python_exe, "-m", "pip", "install", "--upgrade", "pip"])
 subprocess.call([python_exe, "-m", "pip", "install", "gtts"])
 ```
 
-### method 4 blender python install outside of blender (windows):
+### restart blender, if that didn't work you can try:
+#### from blender console:
+`>>> import sys`
+
+`>>> sys.exec_prefix`
+
+'C:\\Program Files\\Blender Foundation\\Blender 2.92\\2.92\\python'
+
+#### then in a a command prompt (windows):
+`cd C:\\Program Files\\Blender Foundation\\Blender 2.92\\2.92\\python\\bin`
+
+`python.exe -m ensurepip`
+
+`python.exe -m pip install gtts`
+
+### restart blender, if that didn't work you can try:
 `cd C:\Program Files\Blender Foundation\Blender 2.92\2.92\python\Scripts`
 
 `pip.exe install gtts`
 
-## register the addon from blender in preferences->addons, or run the following script:
+### to find your blender location, open blender and a python console and type:
+```
+import os
+print(os.sys.path)
+```
+## Register the addon from blender in preferences->addons, or run the following script from blender:
 
 ```
 import os
