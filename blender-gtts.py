@@ -375,6 +375,7 @@ class TextToSpeechOperator(bpy.types.Operator):
     bl_idname = 'custom.speak'
     bl_label = 'speak op'
     bl_options = {'INTERNAL'}
+    bl_description = "turns text into audio strip at current playhead"
   
     @classmethod
     def poll(cls, context):
@@ -393,7 +394,8 @@ class LoadFileOperator(bpy.types.Operator):
     bl_idname = 'custom.load'
     bl_label = 'load op'
     bl_options = {'INTERNAL'}
-  
+    bl_description = "loads closed captions from txt, srt or srb file"
+
     @classmethod
     def poll(cls, context):
         return context.object is not None
@@ -407,6 +409,7 @@ class ExportFileOperator(bpy.types.Operator):
     bl_idname = 'custom.export'
     bl_label = 'load op'
     bl_options = {'INTERNAL'}
+    bl_description = "exports closed caption file to render.filepath"
   
     @classmethod
     def poll(cls, context):
