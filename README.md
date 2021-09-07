@@ -44,32 +44,29 @@ subprocess.call([python_exe, "-m", "pip", "install", "--upgrade", "pip"])
 subprocess.call([python_exe, "-m", "pip", "install", "gtts"])
 ```
 
-### restart blender, if that didn't work you can try:
-#### from blender console:
+### restart blender, if that didn't work try:
+### find your blender location, open blender and a python console and type:
+`import os`
+`print(os.sys.path)`
+### or:
 `>>> import sys`
-
 `>>> sys.exec_prefix`
+### you will find something like the following:
+`C:\\Program Files\\Blender Foundation\\Blender 2.92\\2.92\\python`
 
-'C:\\Program Files\\Blender Foundation\\Blender 2.92\\2.92\\python'
-
-#### then in a a command prompt (windows):
+#### then in a a command prompt (windows), (note adding bin to the python path):
 `cd C:\\Program Files\\Blender Foundation\\Blender 2.92\\2.92\\python\\bin`
-
 `python.exe -m ensurepip`
-
 `python.exe -m pip install gtts`
 
 ### restart blender, if that didn't work you can try:
 `cd C:\Program Files\Blender Foundation\Blender 2.92\2.92\python\Scripts`
-
 `pip.exe install gtts`
 
-### to find your blender location, open blender and a python console and type:
 ```
-import os
-print(os.sys.path)
-```
-## Register the addon from blender in preferences->addons, or run the following script from blender:
+## Register the addon
+### Like you normally would from blender in the preferences addons, either zipped or not
+### or run the following script from blender (just update the path):
 
 ```
 import os
