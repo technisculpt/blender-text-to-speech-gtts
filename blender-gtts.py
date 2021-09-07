@@ -31,10 +31,39 @@ if os.name == 'nt':
 else:
     output_dir = r'/tmp/'
 
+accents_domain = ["com.au","co.uk","com","ca","co.in","ie","co.za","ca","fr","com.br","pt","com.mx","es","com"]
+accents_lang = ["en","en","en","en","en","en","en","fr","fr","pt","pt","es","es","es"]
+
 class CustomPropertyGroup(bpy.types.PropertyGroup):
-    string_field: bpy.props.StringProperty(name='text')
-    
+
+    string_field : bpy.props.StringProperty(name='text')
+
+    pitch : bpy.props.FloatProperty(
+        name="Pitch",
+        description="Control pitch",
+        default=1.0,
+        min=0.1,
+        max=10.0)
+
+    accent_enumerator : bpy.props.EnumProperty(
+                name = "",
+                description = "accent options for speakers",
+                items=[ ('0',"Australia",""),
+                        ('1',"United Kingdom",""),
+                        ('2',"Canada",""),
+                        ('3',"India",""),
+                        ('4',"Ireland",""),
+                        ('5',"South Africa",""),
+                        ('6',"French Canada",""),
+                        ('7',"France",""),
+                        ('8',"Brazil",""),
+                        ('9',"Portugal",""),
+                        ('10',"Mexico",""),
+                        ('11',"Spain",""),
+                        ('12',"Spain (US)","")])
+
 class ExportOptions(bpy.types.PropertyGroup):
+
     mode_enumerator : bpy.props.EnumProperty(
                     name = "",
                     description = "export options for closed captions",
@@ -59,8 +88,10 @@ def ensure_two_chars(number):
     else:
         return string
 
-def sound_strip_from_text(tts, start_frame, language="en", top_level_domain="com.au"):
+def sound_strip_from_text(tts, start_frame, accent_enum, pitch):
 
+    top_level_domain = accents_domain[int(accent_enum)]
+    language = accents_lang[int(accent_enum)]
     if os.name == 'nt':
         output_name = output_dir + '\\' + tts + ".mp3"
     else:
@@ -74,17 +105,29 @@ def sound_strip_from_text(tts, start_frame, language="en", top_level_domain="com
         scene.sequence_editor_create()
     seq = scene.sequence_editor
 
-    bpy.ops.sequencer.sound_strip_add(  filepath=output_name,
+
+    obj = bpy.ops.sequencer.sound_strip_add(filepath=output_name,
                                         frame_start=start_frame,
-                                        channel=2, )
+                                        )
+
 
     obj = ''
+    found = []
     for strip in seq.sequences_all:
-        if output_name.find(strip.name) != -1:
+        if strip.name.find(tts) != -1:
             obj = strip
-            break
+            found.append(strip)
 
-    #obj.pitch = 0.85
+
+    oldest = 0
+    if len(found) > 1:
+        for strip in found:
+            if strip.name.split(".")[1] != 'mp3':
+                if int(strip.name.split(".")[1]) > oldest:
+                    oldest = int(strip.name.split(".")[1])
+                    obj = strip
+
+    obj.pitch = pitch
 
     return obj
 
@@ -122,18 +165,20 @@ class Time():
 
 class Caption():
 
-    def __init__(self, cc_type, name, text, start_time, end_time):
+    def __init__(self, cc_type, name, text, start_time, end_time, accent, pitch):
         self.rearrange = False
         self.cc_type = cc_type # 0 : default, 1 : person, 2 : event
+        self.accent = accent
         self.name = name
         self.text = text
         self.start_time = start_time
         self.end_time = end_time
         self.frame_start = start_time.time_to_frame()
+        self.pitch = pitch
         if self.frame_start != -1:
-            self.sound_strip = sound_strip_from_text(text, self.frame_start)
+            self.sound_strip = sound_strip_from_text(text, self.frame_start, self.accent, self.pitch)
         else:
-            self.sound_strip = sound_strip_from_text(text, 0)
+            self.sound_strip = sound_strip_from_text(text, 0, self.accent, self.pitch)
 
     def update_timecode(self):
         self.start_time.frame_to_time(self.sound_strip.frame_start)
@@ -159,10 +204,12 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
 
             frame_pointer += self.captions[caption].sound_strip.frame_duration
 
-    def __init__(self, text, filename):
+    def __init__(self, text, filename, accent, pitch):
         self.text = text
         self.filename = filename
         self.file_type = -1
+        self.accent = accent
+        self.pitch = pitch
 
         if self.filename[-3:len(self.filename)] == 'txt':
             
@@ -205,13 +252,13 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
                             cc_text += " " + line
                 
                 else: # len(line == 0) equivalent of '\n'
-                    self.captions.append( Caption(cc_type, cc_name, cc_text, Time(-1, -1, -1, -1), Time(-1, -1, -1, -1)) )
+                    self.captions.append( Caption(cc_type, cc_name, cc_text, Time(-1, -1, -1, -1), Time(-1, -1, -1, -1)), self.accent, self.pitch )
                     cc_text = ""
 
                 line_counter += 1
                 if line_counter == len(self.text): # on exit
                     if len(cc_text) > 0:
-                        self.captions.append( Caption(cc_type, cc_name, cc_text, Time(-1, -1, -1, -1), Time(-1, -1, -1, -1)) )
+                        self.captions.append( Caption(cc_type, cc_name, cc_text, Time(-1, -1, -1, -1), Time(-1, -1, -1, -1), self.accent, self.pitch) )
 
             self.arrange_captions_by_time()
             
@@ -277,13 +324,13 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
                             cc_text += " " + line
 
                 else: # len(line == 0) equivalent of '\n'
-                    self.captions.append( Caption(cc_type, cc_name, cc_text, start_time, end_time) )
+                    self.captions.append( Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent, self.pitch) )
                     cc_text = ""
 
                 line_counter += 1
                 if line_counter == len(self.text): # on exit
                     if len(cc_text) > 0:
-                        self.captions.append( Caption(cc_type, cc_name, cc_text, start_time, end_time) )
+                        self.captions.append( Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent, self.pitch) )
 
         elif self.filename[-3:len(self.filename)] == 'sbv' and self.text[0].find(',') != -1:
             
@@ -350,13 +397,13 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
                             cc_text += " " + line
 
                 else: # len(line == 0) equivalent of '\n'
-                    self.captions.append( Caption(cc_type, cc_name, cc_text, start_time, end_time) )
+                    self.captions.append( Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent, self.pitch) )
                     cc_text = ""
 
                 line_counter += 1
                 if line_counter == len(self.text): # on exit
                     if len(cc_text) > 0:
-                        self.captions.append( Caption(cc_type, cc_name, cc_text, start_time, end_time) )
+                        self.captions.append( Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent, self.pitch) )
 
             self.file_type = 2
 
@@ -372,7 +419,7 @@ class ImportTranscript(Operator, ImportHelper):
 
         f = Path(bpy.path.abspath(self.filepath))
         if f.exists():
-            ccs =  ClosedCaptionSet(f.read_text().split("\n"), self.filepath)
+            ccs =  ClosedCaptionSet(f.read_text().split("\n"), self.filepath, context.scene.custom_props.accent_enumerator, context.scene.custom_props.pitch)
             global_captions += ccs.return_objects()
             return {'FINISHED'}
 
@@ -398,6 +445,12 @@ class TextToSpeech(bpy.types.Panel):
         subrow.prop(context.scene.export_options, 'mode_enumerator')
         subrow.operator('custom.export', text = 'export')
 
+        col = layout.column()
+        col.label(text="Accent:")
+        subrow = layout.row(align=True)
+        subrow.prop(context.scene.custom_props, 'accent_enumerator')
+        subrow.prop(context.scene.custom_props, 'pitch')
+
 class TextToSpeechOperator(bpy.types.Operator):
     bl_idname = 'custom.speak'
     bl_label = 'speak op'
@@ -411,7 +464,7 @@ class TextToSpeechOperator(bpy.types.Operator):
     def execute(self, context):
         global global_captions
         seconds = bpy.context.scene.frame_current / bpy.context.scene.render.fps
-        global_captions.append(Caption(0, '', context.scene.custom_props.string_field, Time(0, 0, seconds, 0), Time(-1, -1, -1, -1)))
+        global_captions.append(Caption(0, '', context.scene.custom_props.string_field, Time(0, 0, seconds, 0), Time(-1, -1, -1, -1), context.scene.custom_props.accent_enumerator, context.scene.custom_props.pitch))
         self.report({'INFO'}, "FINISHED")
         return {'FINISHED'}
 
@@ -533,7 +586,6 @@ class ExportFileOperator(bpy.types.Operator):
 
             for caption in range(len(global_captions)):
 
-
                 time_start = (ensure_two_chars(str(global_captions[caption].start_time.hours)) + ':'
                             + ensure_two_chars(str(global_captions[caption].start_time.minutes)) + ':'
                             + ensure_two_chars(str(global_captions[caption].start_time.seconds)) + '.'
@@ -589,113 +641,3 @@ def unregister():
 
 if __name__ == '__main__':
     register()
-
-
-'''
-TODO translations,
-TODO accents,
-
-Local accent
-
-Language code (lang)
-
-Top-level domain (tld)
-
-English (Australia)
-
-en
-
-com.au
-
-English (United Kingdom)
-
-en
-
-co.uk
-
-English (United States)
-
-en
-
-com (default)
-
-English (Canada)
-
-en
-
-ca
-
-English (India)
-
-en
-
-co.in
-
-English (Ireland)
-
-en
-
-ie
-
-English (South Africa)
-
-en
-
-co.za
-
-French (Canada)
-
-fr
-
-ca
-
-French (France)
-
-fr
-
-fr
-
-Mandarin (China Mainland)
-
-zh-CN
-
-any
-
-Mandarin (Taiwan)
-
-zh-TW
-
-any
-
-Portuguese (Brazil)
-
-pt
-
-com.br
-
-Portuguese (Portugal)
-
-pt
-
-pt
-
-Spanish (Mexico)
-
-es
-
-com.mx
-
-Spanish (Spain)
-
-es
-
-es
-
-Spanish (United States)
-
-es
-
-com (default)
-
-
-'''
