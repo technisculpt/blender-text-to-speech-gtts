@@ -88,8 +88,10 @@ def ensure_two_chars(number):
     else:
         return string
 
-def sound_strip_from_text(tts, start_frame, accent_enum, pitch):
-
+def sound_strip_from_text(tts, start_frame, accent_enum, pitch_shift):
+    actual_text = tts
+    tts = tts[0:4]
+    dupe_found = False
     top_level_domain = accents_domain[int(accent_enum)]
     language = accents_lang[int(accent_enum)]
     if os.name == 'nt':
@@ -97,8 +99,31 @@ def sound_strip_from_text(tts, start_frame, accent_enum, pitch):
     else:
         output_name = output_dir +  '/' + tts + ".mp3"
 
-    ttmp3 = gTTS(text=tts, lang=language, tld=top_level_domain)
-    ttmp3.save(output_name)
+    filename = Path(output_name)
+
+    if not filename.exists():
+        ttmp3 = gTTS(text=actual_text, lang=language, tld=top_level_domain)
+        ttmp3.save(output_name)
+
+    else:
+
+        find_unique_name = True
+        tts_copy = tts
+        c = 0
+        dupe_found = True
+        while(find_unique_name):
+            if os.name == 'nt':
+                output_name = output_dir + '\\' + tts_copy + str(c) + ".mp3"
+            else:
+                output_name = output_dir +  '/' + tts_copy + str(c) + ".mp3"
+            filename = Path(output_name)
+            if not filename.exists():
+                ttmp3 = gTTS(text=actual_text, lang=language, tld=top_level_domain)
+                ttmp3.save(output_name)
+                find_unique_name = False
+            else:
+                c += 1
+
     scene = context.scene
     
     if not scene.sequence_editor:
@@ -110,26 +135,25 @@ def sound_strip_from_text(tts, start_frame, accent_enum, pitch):
                                         frame_start=start_frame,
                                         )
 
-
-    obj = ''
+    obj = -1
     found = []
+    
+    if dupe_found:
+        label = tts_copy + str(c)
+    else:
+        label = tts
+
     for strip in seq.sequences_all:
-        if strip.name.find(tts) != -1:
+        if strip.name.find(label) != -1:
             obj = strip
             found.append(strip)
 
-
-    oldest = 0
     if len(found) > 1:
-        for strip in found:
-            if strip.name.split(".")[1] != 'mp3':
-                if int(strip.name.split(".")[1]) > oldest:
-                    oldest = int(strip.name.split(".")[1])
-                    obj = strip
+        print("huh")
 
-    obj.pitch = pitch
-
-    return obj
+    if obj != -1:
+        obj.pitch = pitch_shift
+        return obj
 
 class Time():
 
@@ -252,7 +276,7 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
                             cc_text += " " + line
                 
                 else: # len(line == 0) equivalent of '\n'
-                    self.captions.append( Caption(cc_type, cc_name, cc_text, Time(-1, -1, -1, -1), Time(-1, -1, -1, -1)), self.accent, self.pitch )
+                    self.captions.append( Caption(cc_type, cc_name, cc_text, Time(-1, -1, -1, -1), Time(-1, -1, -1, -1), self.accent, self.pitch) )
                     cc_text = ""
 
                 line_counter += 1
@@ -416,7 +440,6 @@ class ImportTranscript(Operator, ImportHelper):
 
     def execute(self, context):
         global global_captions
-
         f = Path(bpy.path.abspath(self.filepath))
         if f.exists():
             ccs =  ClosedCaptionSet(f.read_text().split("\n"), self.filepath, context.scene.custom_props.accent_enumerator, context.scene.custom_props.pitch)
