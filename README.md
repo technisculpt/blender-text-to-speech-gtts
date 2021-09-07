@@ -15,9 +15,12 @@
 `pip install gtts`
 #### windows, locate app:
 `cd C:\Program Files\Blender Foundation\Blender 2.93`
-
 `blender.exe --python-use-system-env`
-#### linux:
+##### you can avoid changing directory by modifying the PATH on windows 10
+##### using the 'edit the system environment variables' control panel, -> advanced -> environment variables -> System variables, edit path and add the blender directory
+#####
+
+#### on linux PATH is already set:
 `blender --python-use-system-env`
 
 ### If it worked you should be able to open a python console from within blender and not recieve an error when typing:

@@ -8,12 +8,10 @@ from bpy_extras.io_utils import ImportHelper
 from pathlib import Path
 from bpy.props import StringProperty, CollectionProperty
 from bpy.types import Operator
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 global global_captions
 global_captions = []
-
-DEBUG = True
 
 bl_info = {
     "name": "Text To Speech",
@@ -40,7 +38,26 @@ class ExportOptions(bpy.types.PropertyGroup):
     mode_enumerator : bpy.props.EnumProperty(
                     name = "",
                     description = "export options for closed captions",
-                    items=[('0',"txt",""),('1',"srt",""),('2',"srb","")])
+                    items=[('0',"txt",""),('1',"srt",""),('2',"sbv","")])
+
+def refresh_strip_times():
+    global global_captions
+    
+    for caption in global_captions:
+        caption.update_timecode()
+    
+    global_captions.sort(key=lambda caption: caption.current_seconds, reverse=False)
+
+def ensure_two_chars(number):
+    
+    string = str(number)
+
+    if len(string) == 1:
+        return '0' + string
+    elif len(string) > 3:
+        return string[0:3]
+    else:
+        return string
 
 def sound_strip_from_text(tts, start_frame, language="en", top_level_domain="com.au"):
 
@@ -73,7 +90,7 @@ def sound_strip_from_text(tts, start_frame, language="en", top_level_domain="com
 
 class Time():
 
-    def __init__(self, hours, minutes, seconds, milliseconds):
+    def __init__(self, hours=0, minutes=0, seconds=0, milliseconds=0):
         self.hours = hours
         self.minutes = minutes
         self.seconds = seconds
@@ -85,6 +102,23 @@ class Time():
         else:
             total_seconds = self.hours * 3600 + self.minutes * 60 + self.seconds + self.milliseconds/1000
         return total_seconds * bpy.context.scene.render.fps
+
+    def frame_to_time(self, frames):
+        td = timedelta(seconds=(frames / bpy.context.scene.render.fps))
+        if (td.seconds/3600 >= 1):
+            self.hours = int(td.seconds/3600)
+        else:
+            self.hours = 0
+        if (td.seconds/60 >= 1):
+            self.minutes = int(td.seconds/60)
+        else:
+            self.minutes = 0
+        if (td.seconds >= 1):
+            self.seconds = int(td.seconds)
+        else:
+            self.seconds = 0
+        self.milliseconds = int(td.microseconds * 1000)
+        return
 
 class Caption():
 
@@ -101,6 +135,10 @@ class Caption():
         else:
             self.sound_strip = sound_strip_from_text(text, 0)
 
+    def update_timecode(self):
+        self.start_time.frame_to_time(self.sound_strip.frame_start)
+        self.end_time.frame_to_time(self.sound_strip.frame_final_end) #bpy.context.scene.render.fps
+        self.current_seconds = self.sound_strip.frame_start / bpy.context.scene.render.fps
 
 class ClosedCaptionSet(): # translates cc files into a list of Captions
 
@@ -110,7 +148,7 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
     def return_objects(self):
         return self.captions
 
-    def arrange_captions_by_time(self):
+    def arrange_captions_by_time(self): # when timecode not provided
         
         frame_pointer = 0
         for caption in range(len(self.captions)):
@@ -332,19 +370,11 @@ class ImportTranscript(Operator, ImportHelper):
     def execute(self, context):
         global global_captions
 
-        if DEBUG:
-            test_file = r'C:\Users\marco\blender-gtts\tests\transcript_test.txt'
-            f = Path(bpy.path.abspath(test_file))
-            ccs = ClosedCaptionSet(f.read_text().split("\n"), test_file)
+        f = Path(bpy.path.abspath(self.filepath))
+        if f.exists():
+            ccs =  ClosedCaptionSet(f.read_text().split("\n"), self.filepath)
             global_captions += ccs.return_objects()
             return {'FINISHED'}
-
-        else:
-            f = Path(bpy.path.abspath(self.filepath))
-            if f.exists():
-                ccs =  ClosedCaptionSet(f.read_text().split("\n"), self.filepath)
-                global_captions += ccs.return_objects()
-                return {'FINISHED'}
 
 class TextToSpeech(bpy.types.Panel):
     bl_space_type = 'SEQUENCE_EDITOR'
@@ -389,7 +419,7 @@ class LoadFileOperator(bpy.types.Operator):
     bl_idname = 'custom.load'
     bl_label = 'load op'
     bl_options = {'INTERNAL'}
-    bl_description = "loads closed captions from txt, srt or srb file"
+    bl_description = "loads closed captions from txt, srt or sbv file"
 
     @classmethod
     def poll(cls, context):
@@ -404,7 +434,7 @@ class ExportFileOperator(bpy.types.Operator):
     bl_idname = 'custom.export'
     bl_label = 'load op'
     bl_options = {'INTERNAL'}
-    bl_description = "exports closed caption file to render.filepath"
+    bl_description = "exports closed caption file to the render filepath"
   
     @classmethod
     def poll(cls, context):
@@ -414,9 +444,13 @@ class ExportFileOperator(bpy.types.Operator):
 
         global global_captions
 
+        refresh_strip_times()
+
         mode = context.scene.export_options.mode_enumerator
         
-        if mode is '0': # txt file
+        if mode == '0':
+
+            print("exporting to .txt file")
 
             try:
                 f = open(bpy.context.scene.render.filepath + "\captions_" +  datetime.today().strftime('%Y-%m-%d') + ".txt", "x")
@@ -441,15 +475,95 @@ class ExportFileOperator(bpy.types.Operator):
                     f.write('\n')
 
             f.close()
-                #print(bpy.context.scene.render.filepath)
+            self.report({'INFO'}, "FINISHED")
+            return {'FINISHED'}
 
-        #elif mode is '1': # TODO srt
-            #print("srt")
-        #else: # TODO srb
-            #print("srb") 
+        elif mode == '1': # srt file
 
-        self.report({'INFO'}, "done")
-        return {'FINISHED'}
+            print("exporting to .srt file")
+            
+            try:
+                f = open(bpy.context.scene.render.filepath + "\captions_" +  datetime.today().strftime('%Y-%m-%d') + ".srt", "x")
+            except:
+                f = open(bpy.context.scene.render.filepath + "\captions_" +  datetime.today().strftime('%Y-%m-%d') + ".srt", "w")
+
+            for caption in range(len(global_captions)):
+
+                f.write(str(caption + 1) + '\n')
+
+                time_start = (ensure_two_chars(global_captions[caption].start_time.hours) + ':'
+                            + ensure_two_chars(global_captions[caption].start_time.minutes) + ':'
+                            + ensure_two_chars(global_captions[caption].start_time.seconds) + ','
+                            + ensure_two_chars(global_captions[caption].start_time.milliseconds))
+
+                time_end = (ensure_two_chars(global_captions[caption].end_time.hours) + ':'
+                        + ensure_two_chars(global_captions[caption].end_time.minutes) + ':'
+                        + ensure_two_chars(global_captions[caption].end_time.seconds) + ','
+                        + ensure_two_chars(global_captions[caption].end_time.milliseconds))
+
+                f.write(time_start + " --> " + time_end + '\n')
+
+                if global_captions[caption].cc_type == 0: # default text
+
+                    f.write(global_captions[caption].text + '\n')
+
+                elif global_captions[caption].cc_type == 1: # person
+
+                    f.write(">> " + global_captions[caption].name + ': ' + global_captions[caption].text + '\n')
+
+                elif global_captions[caption].cc_type == 2: # event
+
+                    f.write('[' + global_captions[caption].text + ']\n' )
+
+                if caption < len(global_captions):
+                    f.write('\n')
+            
+            f.close()
+            self.report({'INFO'}, "FINISHED")
+            return {'FINISHED'}
+
+        else:
+
+            print("exporting to .sbv file")
+
+            try:
+                f = open(bpy.context.scene.render.filepath + "\captions_" +  datetime.today().strftime('%Y-%m-%d') + ".sbv", "x")
+            except:
+                f = open(bpy.context.scene.render.filepath + "\captions_" +  datetime.today().strftime('%Y-%m-%d') + ".sbv", "w")
+
+            for caption in range(len(global_captions)):
+
+
+                time_start = (ensure_two_chars(str(global_captions[caption].start_time.hours)) + ':'
+                            + ensure_two_chars(str(global_captions[caption].start_time.minutes)) + ':'
+                            + ensure_two_chars(str(global_captions[caption].start_time.seconds)) + '.'
+                            + ensure_two_chars(str(global_captions[caption].start_time.milliseconds)))
+
+                time_end = (ensure_two_chars(str(global_captions[caption].end_time.hours)) + ':'
+                        + ensure_two_chars(str(global_captions[caption].end_time.minutes)) + ':'
+                        + ensure_two_chars(str(global_captions[caption].end_time.seconds)) + '.'
+                        + ensure_two_chars(str(global_captions[caption].end_time.milliseconds)))
+
+                f.write(time_start + "," + time_end + '\n')
+
+                if global_captions[caption].cc_type == 0: # default text
+
+                    f.write(global_captions[caption].text + '\n')
+
+                elif global_captions[caption].cc_type == 1: # person
+
+                    f.write(">> " + global_captions[caption].name + ': ' + global_captions[caption].text + '\n')
+
+                elif global_captions[caption].cc_type == 2: # event
+
+                    f.write('[' + global_captions[caption].text + ']\n' )
+
+                if caption < len(global_captions):
+                    f.write('\n')
+            
+            f.close()
+            self.report({'INFO'}, "FINISHED")
+            return {'FINISHED'}
 
 def register():
     bpy.utils.register_class(CustomPropertyGroup)
