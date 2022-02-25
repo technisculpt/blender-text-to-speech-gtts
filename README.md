@@ -1,4 +1,4 @@
-# blender-gtts
+# blender-text-to-speech
 ### blender wrapper for gtts (google text to speech)
 ### make audio captions quickly
 ### control accent and pitch
@@ -11,4 +11,4 @@
 ![alt text](https://github.com/technisculpt/blender-gtts/blob/main/preview.png)
 
 
-### This addon will install gtts to your Blender python interpreter.
+### This addon will install gtts to your Blender python interpreter
