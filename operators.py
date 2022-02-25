@@ -386,7 +386,7 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
             print("please try .txt, .srt or .sbv file")
 
 class TextToSpeechOperator(bpy.types.Operator):
-    bl_idname = 'custom.speak'
+    bl_idname = 'text_to_speech.speak'
     bl_label = 'speak op'
     bl_options = {'INTERNAL'}
     bl_description = "turns text into audio strip at current playhead"
@@ -399,17 +399,22 @@ class TextToSpeechOperator(bpy.types.Operator):
         global global_captions
         seconds = bpy.context.scene.frame_current / bpy.context.scene.render.fps
         
-        if not context.scene.custom_props.string_field:
+        if not context.scene.text_to_speech.string_field:
             print("no text to convert")
             self.report({'INFO'}, "FINISHED")
             return {'FINISHED'}
         else:
-            global_captions.append(Caption(0, '', context.scene.custom_props.string_field, Time(0, 0, seconds, 0), Time(-1, -1, -1, -1), context.scene.custom_props.accent_enumerator, context.scene.custom_props.pitch))
+            global_captions.append(
+                    Caption(0, '', context.scene.text_to_speech.string_field,
+                    Time(0, 0, seconds, 0), Time(-1, -1, -1, -1),
+                    context.scene.text_to_speech.accent_enumerator,
+                    context.scene.text_to_speech.pitch))
+
             self.report({'INFO'}, "FINISHED")
             return {'FINISHED'}
 
 class LoadFileOperator(bpy.types.Operator):
-    bl_idname = 'custom.load'
+    bl_idname = 'text_to_speech.load'
     bl_label = 'load op'
     bl_options = {'INTERNAL'}
     bl_description = "loads closed captions from txt, srt or sbv file"
@@ -424,7 +429,7 @@ class LoadFileOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 class ExportFileOperator(bpy.types.Operator):
-    bl_idname = 'custom.export'
+    bl_idname = 'text_to_speech.export'
     bl_label = 'load op'
     bl_options = {'INTERNAL'}
     bl_description = "exports closed caption file to the render filepath"
@@ -439,7 +444,7 @@ class ExportFileOperator(bpy.types.Operator):
 
         refresh_strip_times()
 
-        mode = context.scene.export_options.mode_enumerator
+        mode = context.scene.text_to_speech.mode_enumerator
         
         if mode == '0':
 
@@ -565,6 +570,8 @@ class ImportTranscript(Operator, ImportHelper):
         global global_captions
         f = Path(bpy.path.abspath(self.filepath))
         if f.exists():
-            ccs =  ClosedCaptionSet(f.read_text().split("\n"), self.filepath, context.scene.custom_props.accent_enumerator, context.scene.custom_props.pitch)
+            ccs =  ClosedCaptionSet(f.read_text().split("\n"), self.filepath,
+                context.scene.text_to_speech.accent_enumerator,
+                context.scene.text_to_speech.pitch)
             global_captions += ccs.return_objects()
             return {'FINISHED'}
