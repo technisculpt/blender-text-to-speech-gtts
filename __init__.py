@@ -1,3 +1,23 @@
+import bpy
+
+try:
+    import gtts
+
+except ModuleNotFoundError:
+    print("installing gtts...")
+    import subprocess
+    import bpy
+    py_exec = bpy.app.binary_path_python
+    subprocess.call([str(py_exec), "-m", "ensurepip", "--user"])
+    subprocess.call([str(py_exec), "-m", "pip", "install", "--upgrade", "pip"])
+    subprocess.call([str(py_exec),"-m", "pip", "install", "--user", "gtts"])
+    
+    try:
+        import gtts
+
+    except ModuleNotFoundError:
+        print("Error installing gtts. Try restarting Blender. If using Windows open Blender as administrator for install")
+
 from numbers import Number
 from re import T
 from gtts import gTTS
@@ -487,9 +507,15 @@ class TextToSpeechOperator(bpy.types.Operator):
     def execute(self, context):
         global global_captions
         seconds = bpy.context.scene.frame_current / bpy.context.scene.render.fps
-        global_captions.append(Caption(0, '', context.scene.custom_props.string_field, Time(0, 0, seconds, 0), Time(-1, -1, -1, -1), context.scene.custom_props.accent_enumerator, context.scene.custom_props.pitch))
-        self.report({'INFO'}, "FINISHED")
-        return {'FINISHED'}
+        
+        if not context.scene.custom_props.string_field:
+            print("no text to convert")
+            self.report({'INFO'}, "FINISHED")
+            return {'FINISHED'}
+        else:
+            global_captions.append(Caption(0, '', context.scene.custom_props.string_field, Time(0, 0, seconds, 0), Time(-1, -1, -1, -1), context.scene.custom_props.accent_enumerator, context.scene.custom_props.pitch))
+            self.report({'INFO'}, "FINISHED")
+            return {'FINISHED'}
 
 class LoadFileOperator(bpy.types.Operator):
     bl_idname = 'custom.load'
