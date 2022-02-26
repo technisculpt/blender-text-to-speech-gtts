@@ -11,22 +11,31 @@ bl_info = {
     "category": "Sequencer",
 }
 
-
 try:
     import gtts
+
 except ModuleNotFoundError:
     print("installing gtts...")
     import subprocess
     import bpy
-    py_exec = bpy.app.binary_path_python
-    subprocess.call([str(py_exec), "-m", "ensurepip", "--user"])
-    subprocess.call([str(py_exec), "-m", "pip", "install", "--upgrade", "pip"])
-    subprocess.call([str(py_exec),"-m", "pip", "install", "--user", "gtts"])
-    
-    try:
-        import gtts
-    except ModuleNotFoundError:
-        print("Error installing gtts. Try restarting Blender. If using Windows open Blender as administrator (for initial install)")
+    import os
+    from pathlib import Path
+    if os.name == 'nt': # TODO bl version check instead of os
+        import sys
+        py_exec =  next((Path(sys.prefix)/"bin").glob("python*")) # this isn't working
+        subprocess.call([str(py_exec), "-m", "pip", "uninstall", "pip", "setuptools"])
+        subprocess.call([str(py_exec), "-m", "ensurepip", "--user"])
+        subprocess.call([str(py_exec),"-m", "pip", "install", "-U", "pip"])
+        subprocess.call([str(py_exec),"-m", "pip", "install", "--user", "gtts"])
+    else:
+        py_exec = bpy.app.binary_path_python
+        subprocess.call([str(py_exec), "-m", "ensurepip", "--user"])
+        subprocess.call([str(py_exec), "-m", "pip", "install", "--upgrade", "pip"])
+        subprocess.call([str(py_exec),"-m", "pip", "install", "--user", "gtts"])
+except PermissionError:
+    print("to install, right click the Blender icon and run as Administrator")
+except:
+    print("Error installing gtts")
 
 from numbers import Number
 from re import T
@@ -35,7 +44,13 @@ from bpy.props import StringProperty, CollectionProperty
 
 # append dir to path for dev, for prod use from . import module
 import sys
+import os
+
 dir = r'/home/magag/text_to_speech'
+
+if os.name == 'nt':
+    dir = r"C:\Users\marco\blender-text-to-speech"
+
 sys.path.append(dir)
 
 import operators
