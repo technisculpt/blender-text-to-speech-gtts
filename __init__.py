@@ -20,66 +20,79 @@ except ModuleNotFoundError:
     import bpy
     import os
     from pathlib import Path
-    if os.name == 'nt': # TODO bl version check instead of os
-        import sys
-        py_exec =  next((Path(sys.prefix)/"bin").glob("python*")) # this isn't working
-        subprocess.call([str(py_exec), "-m", "pip", "uninstall", "pip", "setuptools"])
-        subprocess.call([str(py_exec), "-m", "ensurepip", "--user"])
-        subprocess.call([str(py_exec),"-m", "pip", "install", "-U", "pip"])
-        subprocess.call([str(py_exec),"-m", "pip", "install", "--user", "gtts"])
-    else:
+    if bpy.app.version < (2, 92, 0):
         py_exec = bpy.app.binary_path_python
         subprocess.call([str(py_exec), "-m", "ensurepip", "--user"])
         subprocess.call([str(py_exec), "-m", "pip", "install", "--upgrade", "pip"])
         subprocess.call([str(py_exec),"-m", "pip", "install", "--user", "gtts"])
-except PermissionError:
-    print("to install, right click the Blender icon and run as Administrator")
-except:
-    print("Error installing gtts")
-
-from numbers import Number
-from re import T
-import bpy
-from bpy.props import StringProperty, CollectionProperty
-
-# append dir to path for dev, for prod use from . import module
-import sys
-import os
-
-dir = r'/home/magag/text_to_speech'
-
-if os.name == 'nt':
-    dir = r"C:\Users\marco\blender-text-to-speech"
-
-sys.path.append(dir)
-
-import operators
-import ui
-import importlib
-importlib.reload(operators)
-importlib.reload(ui)
-
-classes = (
-    ui.TextToSpeechSettings,
-    ui.TextToSpeech_PT,
-    operators.TextToSpeechOperator,
-    operators.LoadFileOperator,
-    operators.ExportFileOperator,
-    operators.ImportTranscript,
-    )
+    else:
+        import sys
+        python_exe = os.path.join(sys.prefix, 'bin', 'python.exe')
+        subprocess.call([str(python_exe), "-m", "ensurepip", "--user"])
+        subprocess.call([str(python_exe), "-m", "pip", "install", "--upgrade", "pip"])
+        subprocess.call([str(python_exe),"-m", "pip", "install", "--user", "gtts"])
+        
+        # check if installed to blenders python
+        lib_dir = (python_exe.split("bin\python.exe")[0] + 'lib')
+        #os.chdir(lib_dir)
+        files = os.listdir(lib_dir)
+        if 'gtts' in files:
+            print(files)
+        else:
+            print("gtts not installed")
+            print(sys.executable)
 
 
-def register():
-    for cls in classes:
-        bpy.utils.register_class(cls)
+# except PermissionError:
+#     print("to install, right click the Blender icon and run as Administrator")
+# except:
+#     print("Error installing gtts")
 
-    bpy.types.Scene.text_to_speech = bpy.props.PointerProperty(type=ui.TextToSpeechSettings)
+# from numbers import Number
+# from re import T
+# import bpy
+# from bpy.props import StringProperty, CollectionProperty
 
-def unregister():
-    for cls in classes:
-        bpy.utils.unregister_class(cls)
+# # append dir to path for dev, for prod use from . import module
+# import sys
+# import os
 
-    del bpy.types.Scene.text_to_speech
+# dir = r'/home/magag/text_to_speech'
 
-if __name__ == '__main__':
-    register()
+# if os.name == 'nt':
+#     dir = r"C:\Users\marco\blender-text-to-speech"
+
+# sys.path.append(dir)
+
+# import operators
+# import ui
+# import importlib
+# importlib.reload(operators)
+# importlib.reload(ui)
+
+# classes = (
+#     ui.TextToSpeechSettings,
+#     ui.TextToSpeech_PT,
+#     operators.TextToSpeechOperator,
+#     operators.LoadFileOperator,
+#     operators.ExportFileOperator,
+#     operators.ImportTranscript,
+#     )
+
+
+# def register():
+#     for cls in classes:
+#         bpy.utils.register_class(cls)
+
+#     bpy.types.Scene.text_to_speech = bpy.props.PointerProperty(type=ui.TextToSpeechSettings)
+
+# def unregister():
+#     for cls in classes:
+#         bpy.utils.unregister_class(cls)
+
+#     del bpy.types.Scene.text_to_speech
+
+
+
+# if __name__ == '__main__':
+#     register()
