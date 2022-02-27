@@ -4,9 +4,7 @@ from pathlib import Path
 from datetime import date, datetime, timedelta
 
 import bpy
-from bpy import context
 from bpy_extras.io_utils import ImportHelper
-from bpy.types import Operator
 
 global global_captions
 global_captions = []
