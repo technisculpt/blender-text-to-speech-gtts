@@ -1,16 +1,24 @@
-from gtts import gTTS
 import os
+import sys
 from pathlib import Path
 from datetime import date, datetime, timedelta
+import importlib
 
 import bpy
+from bpy.types import Operator
 from bpy_extras.io_utils import ImportHelper
+
+# append dir to path for dev, for prod use from . import module
+dir = r'/home/magag/text_to_speech'
+if os.name == 'nt':
+    dir = r"C:\Users\marco\blender-text-to-speech"
+sys.path.append(dir)
+
+import text_to_sound as tts
+importlib.reload(tts)
 
 global global_captions
 global_captions = []
-
-accents_domain = ["com.au","co.uk","com","ca","co.in","ie","co.za","ca","fr","com.br","pt","com.mx","es","com"]
-accents_lang = ["en","en","en","en","en","en","en","fr","fr","pt","pt","es","es","es"]
 
 if os.name == 'nt':
     output_dir = r'C:\\tmp\\'
@@ -35,74 +43,6 @@ def ensure_two_chars(number):
         return string[0:3]
     else:
         return string
-
-def sound_strip_from_text(tts, start_frame, accent_enum, pitch_shift):
-    actual_text = tts
-    tts = tts[0:4]
-    dupe_found = False
-    top_level_domain = accents_domain[int(accent_enum)]
-    language = accents_lang[int(accent_enum)]
-
-    if os.name == 'nt':
-        output_name = output_dir + '\\' + tts + ".mp3"
-    else:
-        output_name = output_dir +  '/' + tts + ".mp3"
-
-    filename = Path(output_name)
-
-    if not filename.exists():
-        ttmp3 = gTTS(text=actual_text, lang=language, tld=top_level_domain)
-        ttmp3.save(output_name)
-
-    else:
-
-        find_unique_name = True
-        tts_copy = tts
-        c = 0
-        dupe_found = True
-        while(find_unique_name):
-            if os.name == 'nt':
-                output_name = output_dir + '\\' + tts_copy + str(c) + ".mp3"
-            else:
-                output_name = output_dir +  '/' + tts_copy + str(c) + ".mp3"
-            filename = Path(output_name)
-            if not filename.exists():
-                ttmp3 = gTTS(text=actual_text, lang=language, tld=top_level_domain)
-                ttmp3.save(output_name)
-                find_unique_name = False
-            else:
-                c += 1
-
-    scene = context.scene
-    
-    if not scene.sequence_editor:
-        scene.sequence_editor_create()
-    seq = scene.sequence_editor
-
-
-    obj = bpy.ops.sequencer.sound_strip_add(filepath=output_name,
-                                        frame_start=start_frame,
-                                        )
-
-    obj = -1
-    found = []
-    
-    if dupe_found:
-        label = tts_copy + str(c)
-    else:
-        label = tts
-
-    for strip in seq.sequences_all:
-        if strip.name.find(label) != -1:
-            obj = strip
-            found.append(strip)
-
-    if len(found) > 1:
-        print("huh")
-
-    if obj != -1:
-        obj.pitch = pitch_shift
-        return obj
 
 class Time():
 
@@ -138,7 +78,7 @@ class Time():
 
 class Caption():
 
-    def __init__(self, cc_type, name, text, start_time, end_time, accent, pitch):
+    def __init__(self, cc_type, name, text, start_time, end_time, accent):
         self.rearrange = False
         self.cc_type = cc_type # 0 : default, 1 : person, 2 : event
         self.accent = accent
@@ -147,11 +87,11 @@ class Caption():
         self.start_time = start_time
         self.end_time = end_time
         self.frame_start = start_time.time_to_frame()
-        self.pitch = pitch
+
         if self.frame_start != -1:
-            self.sound_strip = sound_strip_from_text(text, self.frame_start, self.accent, self.pitch)
+            self.sound_strip = tts.sound_strip_from_text(text, self.frame_start, self.accent)
         else:
-            self.sound_strip = sound_strip_from_text(text, 0, self.accent, self.pitch)
+            self.sound_strip = tts.sound_strip_from_text(text, 0, self.accent)
 
     def update_timecode(self):
         self.start_time.frame_to_time(self.sound_strip.frame_start)
@@ -177,12 +117,11 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
 
             frame_pointer += self.captions[caption].sound_strip.frame_duration
 
-    def __init__(self, text, filename, accent, pitch):
+    def __init__(self, text, filename, accent):
         self.text = text
         self.filename = filename
         self.file_type = -1
         self.accent = accent
-        self.pitch = pitch
 
         if self.filename[-3:len(self.filename)] == 'txt':
             
@@ -225,13 +164,13 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
                             cc_text += " " + line
                 
                 else: # len(line == 0) equivalent of '\n'
-                    self.captions.append( Caption(cc_type, cc_name, cc_text, Time(-1, -1, -1, -1), Time(-1, -1, -1, -1), self.accent, self.pitch) )
+                    self.captions.append( Caption(cc_type, cc_name, cc_text, Time(-1, -1, -1, -1), Time(-1, -1, -1, -1), self.accent) )
                     cc_text = ""
 
                 line_counter += 1
                 if line_counter == len(self.text): # on exit
                     if len(cc_text) > 0:
-                        self.captions.append( Caption(cc_type, cc_name, cc_text, Time(-1, -1, -1, -1), Time(-1, -1, -1, -1), self.accent, self.pitch) )
+                        self.captions.append( Caption(cc_type, cc_name, cc_text, Time(-1, -1, -1, -1), Time(-1, -1, -1, -1), self.accent) )
 
             self.arrange_captions_by_time()
             
@@ -297,13 +236,13 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
                             cc_text += " " + line
 
                 else: # len(line == 0) equivalent of '\n'
-                    self.captions.append( Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent, self.pitch) )
+                    self.captions.append( Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent) )
                     cc_text = ""
 
                 line_counter += 1
                 if line_counter == len(self.text): # on exit
                     if len(cc_text) > 0:
-                        self.captions.append( Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent, self.pitch) )
+                        self.captions.append( Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent) )
 
         elif self.filename[-3:len(self.filename)] == 'sbv' and self.text[0].find(',') != -1:
             
@@ -370,13 +309,13 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
                             cc_text += " " + line
 
                 else: # len(line == 0) equivalent of '\n'
-                    self.captions.append( Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent, self.pitch) )
+                    self.captions.append( Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent) )
                     cc_text = ""
 
                 line_counter += 1
                 if line_counter == len(self.text): # on exit
                     if len(cc_text) > 0:
-                        self.captions.append( Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent, self.pitch) )
+                        self.captions.append( Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent) )
 
             self.file_type = 2
 
@@ -405,8 +344,7 @@ class TextToSpeechOperator(bpy.types.Operator):
             global_captions.append(
                     Caption(0, '', context.scene.text_to_speech.string_field,
                     Time(0, 0, seconds, 0), Time(-1, -1, -1, -1),
-                    context.scene.text_to_speech.accent_enumerator,
-                    context.scene.text_to_speech.pitch))
+                    context.scene.text_to_speech.accent_enumerator))
 
             self.report({'INFO'}, "FINISHED")
             return {'FINISHED'}
@@ -569,7 +507,6 @@ class ImportTranscript(Operator, ImportHelper):
         f = Path(bpy.path.abspath(self.filepath))
         if f.exists():
             ccs =  ClosedCaptionSet(f.read_text().split("\n"), self.filepath,
-                context.scene.text_to_speech.accent_enumerator,
-                context.scene.text_to_speech.pitch)
+                context.scene.text_to_speech.accent_enumerator)
             global_captions += ccs.return_objects()
             return {'FINISHED'}

@@ -4,13 +4,15 @@ class TextToSpeechSettings(bpy.types.PropertyGroup):
 
     string_field : bpy.props.StringProperty(name='text')
 
+    '''
     pitch : bpy.props.FloatProperty(
         name="Pitch",
         description="Control pitch",
         default=1.0,
         min=0.1,
         max=10.0)
-
+    '''
+    
     accent_enumerator : bpy.props.EnumProperty(
                 name = "",
                 description = "accent options for speakers",
@@ -60,4 +62,4 @@ class TextToSpeech_PT(bpy.types.Panel):
         col.label(text="Accent:")
         subrow = layout.row(align=True)
         subrow.prop(context.scene.text_to_speech, 'accent_enumerator')
-        subrow.prop(context.scene.text_to_speech, 'pitch')
+        #subrow.prop(context.scene.text_to_speech, 'pitch')
