@@ -95,7 +95,7 @@ class Caption():
 
     def update_timecode(self):
         self.start_time.frame_to_time(self.sound_strip.frame_start)
-        self.end_time.frame_to_time(self.sound_strip.frame_final_end) #bpy.context.scene.render.fps
+        self.end_time.frame_to_time(self.sound_strip.frame_final_end)
         self.current_seconds = self.sound_strip.frame_start / bpy.context.scene.render.fps
 
 class ClosedCaptionSet(): # translates cc files into a list of Captions
@@ -107,15 +107,20 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
         return self.captions
 
     def arrange_captions_by_time(self): # when timecode not provided
-        
+
+        for caption in range(len(self.captions)):
+            self.captions[caption].sound_strip.select = False
+
         frame_pointer = 0
         for caption in range(len(self.captions)):
 
             if caption > 0:
 
-                self.captions[caption].sound_strip.frame_start = frame_pointer
-
-            frame_pointer += self.captions[caption].sound_strip.frame_duration
+                self.captions[caption].sound_strip.select = True
+                bpy.ops.transform.seq_slide(value=(frame_pointer, 0))
+                self.captions[caption].sound_strip.select = False
+ 
+            frame_pointer += self.captions[caption].sound_strip.frame_duration + bpy.context.scene.render.fps
 
     def __init__(self, text, filename, accent):
         self.text = text

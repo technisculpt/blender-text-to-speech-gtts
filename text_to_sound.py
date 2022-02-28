@@ -33,4 +33,7 @@ def sound_strip_from_text(tts, start_frame, accent_enum):
         scene.sequence_editor_create()
     seq = scene.sequence_editor
 
-    obj = bpy.ops.sequencer.sound_strip_add(filepath=output_name, frame_start=start_frame)
+    #obj = bpy.ops.sequencer.sound_strip_add(filepath=output_name, frame_start=start_frame)
+    obj = seq.sequences.new_sound(tts, filepath=output_name, channel=1, frame_start=start_frame)
+    
+    return obj
