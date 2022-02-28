@@ -1,7 +1,7 @@
 # blender-text-to-speech
 ### blender wrapper for gtts (google text to speech)
 ### make audio captions quickly
-### control accent and pitch
+### control accent
 ### convert closed captions files to audio
 ### import .srt, .srb and .txt closed captions files directly to speech audio strips placed at timecodes if provided
 ### importing .txt files with no timecodes will place the audio strips in sequence based on order and strip length
