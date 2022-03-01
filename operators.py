@@ -108,8 +108,7 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
 
     def arrange_captions_by_time(self): # when timecode not provided
 
-        for caption in range(len(self.captions)):
-            self.captions[caption].sound_strip.select = False
+        bpy.ops.sequencer.select_all(action='DESELECT')
 
         frame_pointer = 0
         for caption in range(len(self.captions)):
