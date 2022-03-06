@@ -2,6 +2,8 @@ import bpy
 
 class TextToSpeechSettings(bpy.types.PropertyGroup):
 
+    persistent_string : bpy.props.StringProperty(name='persistent_string')
+
     string_field : bpy.props.StringProperty(name='text')
 
     '''

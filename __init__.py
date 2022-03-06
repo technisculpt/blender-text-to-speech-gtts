@@ -11,14 +11,21 @@ bl_info = {
     "category": "Sequencer",
 }
 
+from numbers import Number
+from re import T
+import sys
+import os
+
+import bpy
+#from bpy.app.handlers import save_pre, load_post
+
+
 try:
     import gtts
 
 except ModuleNotFoundError:
     print("installing gtts...")
     import subprocess
-    import bpy
-    import os
     from pathlib import Path
 
     if bpy.app.version < (2, 92, 0):
@@ -27,7 +34,6 @@ except ModuleNotFoundError:
         subprocess.call([str(py_exec), "-m", "pip", "install", "--upgrade", "pip"])
         subprocess.call([str(py_exec),"-m", "pip", "install", "--user", "gtts"])
     else:
-        import sys
         py_exec = str(sys.executable)
         lib = os.path.join(Path(py_exec).parent.parent, "lib")
         subprocess.call([py_exec, "-m", "ensurepip", "--user" ])
@@ -41,11 +47,7 @@ except ModuleNotFoundError:
         except:
             print("Error installing gtts")
 
-from numbers import Number
-from re import T
-import bpy
-import sys
-import os
+
 
 # append dir to path for dev, for prod use from . import module
 dir = r'/home/magag/text_to_speech'
@@ -53,9 +55,10 @@ if os.name == 'nt':
     dir = r"C:\Users\marco\blender-text-to-speech"
 sys.path.append(dir)
 
+import importlib
+
 import operators
 import ui
-import importlib
 importlib.reload(operators)
 importlib.reload(ui)
 
@@ -68,6 +71,8 @@ classes = (
     operators.ImportTranscript,
     )
 
+
+bpy.app.handlers.save_pre.append(operators.save_handler)
 
 def register():
     for cls in classes:

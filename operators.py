@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 from datetime import date, datetime, timedelta
 import importlib
+import pickle
 
 import bpy
 from bpy.types import Operator
@@ -25,7 +26,14 @@ if os.name == 'nt':
 else:
     output_dir = r'/tmp/'
 
-def refresh_strip_times():
+def remove_deleted_strips():
+    global global_captions
+
+    for index, caption in enumerate(global_captions):
+        if not caption.sound_strip.name:
+            del global_captions[index]
+
+def sort_strips_by_time():
     global global_captions
     
     for caption in global_captions:
@@ -33,8 +41,20 @@ def refresh_strip_times():
     
     global_captions.sort(key=lambda caption: caption.current_seconds, reverse=False)
 
+def save_handler(scene):
+    global global_captions
+    remove_deleted_strips()
+    sort_strips_by_time()
+
+    string_to_save = ""
+    for caption in global_captions:
+
+        string_to_save += f"{caption.sound_strip.name}|{caption.cc_type}|{caption.accent}|{caption.name}GTTS_TEXT{caption.text}`"
+
+    bpy.context.scene.text_to_speech.string_field = string_to_save
+    print(bpy.context.scene.text_to_speech.string_field)
+
 def ensure_two_chars(number):
-    
     string = str(number)
 
     if len(string) == 1:
@@ -45,7 +65,6 @@ def ensure_two_chars(number):
         return string
 
 class Time():
-
     def __init__(self, hours=0, minutes=0, seconds=0, milliseconds=0):
         self.hours = hours
         self.minutes = minutes
@@ -77,9 +96,7 @@ class Time():
         return
 
 class Caption():
-
     def __init__(self, cc_type, name, text, start_time, end_time, accent):
-        self.rearrange = False
         self.cc_type = cc_type # 0 : default, 1 : person, 2 : event
         self.accent = accent
         self.name = name
@@ -89,9 +106,9 @@ class Caption():
         self.frame_start = start_time.time_to_frame()
 
         if self.frame_start != -1:
-            self.sound_strip = tts.sound_strip_from_text(text, self.frame_start, self.accent)
+            self.sound_strip = tts.sound_strip_from_text(text, self.frame_start, accent)
         else:
-            self.sound_strip = tts.sound_strip_from_text(text, 0, self.accent)
+            self.sound_strip = tts.sound_strip_from_text(text, 0, accent)
 
     def update_timecode(self):
         self.start_time.frame_to_time(self.sound_strip.frame_start)
@@ -99,7 +116,6 @@ class Caption():
         self.current_seconds = self.sound_strip.frame_start / bpy.context.scene.render.fps
 
 class ClosedCaptionSet(): # translates cc files into a list of Captions
-
     captions = []
     people = []
 
@@ -168,13 +184,13 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
                             cc_text += " " + line
                 
                 else: # len(line == 0) equivalent of '\n'
-                    self.captions.append( Caption(cc_type, cc_name, cc_text, Time(-1, -1, -1, -1), Time(-1, -1, -1, -1), self.accent) )
+                    self.captions.append(Caption(cc_type, cc_name, cc_text, Time(-1, -1, -1, -1), Time(-1, -1, -1, -1), self.accent))
                     cc_text = ""
 
                 line_counter += 1
                 if line_counter == len(self.text): # on exit
                     if len(cc_text) > 0:
-                        self.captions.append( Caption(cc_type, cc_name, cc_text, Time(-1, -1, -1, -1), Time(-1, -1, -1, -1), self.accent) )
+                        self.captions.append(Caption(cc_type, cc_name, cc_text, Time(-1, -1, -1, -1), Time(-1, -1, -1, -1), self.accent))
 
             self.arrange_captions_by_time()
             
@@ -240,13 +256,13 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
                             cc_text += " " + line
 
                 else: # len(line == 0) equivalent of '\n'
-                    self.captions.append( Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent) )
+                    self.captions.append(Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent))
                     cc_text = ""
 
                 line_counter += 1
                 if line_counter == len(self.text): # on exit
                     if len(cc_text) > 0:
-                        self.captions.append( Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent) )
+                        self.captions.append(Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent))
 
         elif self.filename[-3:len(self.filename)] == 'sbv' and self.text[0].find(',') != -1:
             
@@ -313,13 +329,13 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
                             cc_text += " " + line
 
                 else: # len(line == 0) equivalent of '\n'
-                    self.captions.append( Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent) )
+                    self.captions.append(Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent))
                     cc_text = ""
 
                 line_counter += 1
                 if line_counter == len(self.text): # on exit
                     if len(cc_text) > 0:
-                        self.captions.append( Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent) )
+                        self.captions.append(Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent))
 
             self.file_type = 2
 
@@ -382,7 +398,7 @@ class ExportFileOperator(bpy.types.Operator):
 
         global global_captions
 
-        refresh_strip_times()
+        sort_strips_by_time()
 
         mode = context.scene.text_to_speech.mode_enumerator
         
