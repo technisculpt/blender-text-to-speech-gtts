@@ -4,7 +4,7 @@ class TextToSpeechSettings(bpy.types.PropertyGroup):
 
     persistent_string : bpy.props.StringProperty(name='persistent_string')
 
-    string_field : bpy.props.StringProperty(name='text')
+    string_field : bpy.props.StringProperty(name='Text')
 
     '''
     pitch : bpy.props.FloatProperty(
@@ -40,28 +40,28 @@ class TextToSpeechSettings(bpy.types.PropertyGroup):
 class TextToSpeech_PT(bpy.types.Panel):
     bl_space_type = 'SEQUENCE_EDITOR'
     bl_region_type = 'UI'
-    bl_label = 'textToSpeech'
+    bl_label = 'Text To Speech'
     bl_category = 'Text To Speech'
     bl_idname = 'SEQUENCER_PT_textToSpeech'
 
     def draw(self, context):
         layout = self.layout
         col = layout.column()
-        col.label(text="Add Caption:")
+        col.label(text="Add Caption")
         layout.prop(context.scene.text_to_speech, 'string_field')
-        layout.operator('text_to_speech.speak', text = 'add caption')
+        layout.operator('text_to_speech.speak', text = 'Add Caption')
         col = layout.column()
-        col.label(text="Load Captions:")
-        layout.operator('text_to_speech.load', text = 'load captions file')
+        col.label(text="Load Captions")
+        layout.operator('text_to_speech.load', text = 'Load Captions File')
 
         col = layout.column()
-        col.label(text="Export Captions:")
+        col.label(text="Export Captions")
         subrow = layout.row(align=True)
         subrow.prop(context.scene.text_to_speech, 'mode_enumerator')
-        subrow.operator('text_to_speech.export', text = 'export')
+        subrow.operator('text_to_speech.export', text = 'Export')
 
         col = layout.column()
-        col.label(text="Accent:")
+        col.label(text="Accent")
         subrow = layout.row(align=True)
         subrow.prop(context.scene.text_to_speech, 'accent_enumerator')
         #subrow.prop(context.scene.text_to_speech, 'pitch')

@@ -7,7 +7,7 @@ bl_info = {
     "location": "SEQUENCE_EDITOR > UI > Text To Speech",
     "warning": "",
     "doc_url": "https://github.com/technisculpt/blender-gtts",
-    "support": "TESTING",
+    "support": "DEV",
     "category": "Sequencer",
 }
 
@@ -42,6 +42,7 @@ except ModuleNotFoundError:
         
         try:
             import gtts
+            print("gtts installed")
         except PermissionError:
             print("to install, right click the Blender icon and run as Administrator")
         except:
