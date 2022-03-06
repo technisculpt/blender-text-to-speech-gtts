@@ -2,7 +2,7 @@ import bpy
 
 class TextToSpeechSettings(bpy.types.PropertyGroup):
 
-    persistent_string : bpy.props.StringProperty(name='persistent_string')
+    persistent_string : bpy.props.StringProperty(name='Persistent String')
 
     string_field : bpy.props.StringProperty(name='Text')
 
@@ -58,7 +58,7 @@ class TextToSpeech_PT(bpy.types.Panel):
         col.label(text="Export Captions")
         subrow = layout.row(align=True)
         subrow.prop(context.scene.text_to_speech, 'mode_enumerator')
-        subrow.operator('text_to_speech.export', text = 'Export')
+        subrow.operator('text_to_speech.export', text = 'export')
 
         col = layout.column()
         col.label(text="Accent")
