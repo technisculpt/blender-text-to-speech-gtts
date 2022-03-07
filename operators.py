@@ -32,7 +32,6 @@ else:
 def load_handler(_scene):
     global global_captions
 
-    print("Load handler entered")
     if bpy.context.scene.text_to_speech.persistent_string:
 
         context = bpy.context
@@ -87,7 +86,6 @@ def sort_strips_by_time():
 
 @persistent
 def save_handler(_scene):
-    print("Save handler entered")
     global global_captions
     remove_deleted_strips()
     sort_strips_by_time()
@@ -444,9 +442,9 @@ class ExportFileOperator(bpy.types.Operator):
         return context.object is not None
     
     def execute(self, context):
-
         global global_captions
 
+        remove_deleted_strips()
         sort_strips_by_time()
 
         mode = context.scene.text_to_speech.mode_enumerator
