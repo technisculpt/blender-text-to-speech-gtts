@@ -41,28 +41,31 @@ def load_handler(_scene):
 
         captions_raw = bpy.context.scene.text_to_speech.persistent_string.split('`')
         for caption in captions_raw:
-            captions_split = captions_raw.split('GTTS_TEXT')
-            caption_text = captions_split[1]
+
+            captions_split = caption.split('GTTS_TEXT')
             caption_meta = captions_split[0].split('|')
-            strip_name = caption_meta[0]
-            cc_type = caption_meta[1]
-            accent = caption_meta[2]
-            name = caption_meta[3]
-            channel = caption_meta[4]
-            caption_strip = -1
 
-            for strip in seq.sequences_all:
-                if strip.name == strip_name:
-                    caption_strip = strip
+            if len(caption_meta) > 1:
 
-            if caption_strip != -1:
+                strip_name = caption_meta[0]
+                cc_type = caption_meta[1]
+                accent = caption_meta[2]
+                name = caption_meta[3]
+                channel = caption_meta[4]
+                caption_strip = -1
 
-                  # cc_type, name, text, start_time, end_time, accent, channel
-                new_cap = Caption(cc_type, name, -1,
-                        Time(0, 0, 0, 0), Time(-1, -1, -1, -1),
-                        accent, channel)
-                new_cap.sound_strip = caption_strip
-                new_cap.update_timecode()
+                for strip in seq.sequences_all:
+                    if strip.name == strip_name:
+                        caption_strip = strip
+
+                if caption_strip != -1:
+
+                    # cc_type, name, text, start_time, end_time, accent, channel
+                    new_cap = Caption(cc_type, name, -1,
+                            Time(0, 0, 0, 0), Time(-1, -1, -1, -1),
+                            accent, channel)
+                    new_cap.sound_strip = caption_strip
+                    new_cap.update_timecode()
     else:
         print("data not found")
 

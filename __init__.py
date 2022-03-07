@@ -17,8 +17,6 @@ import sys
 import os
 
 import bpy
-#from bpy.app.handlers import save_pre, load_post
-
 
 try:
     import gtts
@@ -72,6 +70,15 @@ classes = (
     operators.ImportTranscript,
     )
 
+
+for handler in bpy.app.handlers.load_post:
+    if handler.__name__ == 'load_handler':
+        bpy.app.handlers.load_post.remove(handler)
+
+for handler in bpy.app.handlers.save_pre:
+    if handler.__name__ == 'save_handler':
+        bpy.app.handlers.save_pre.remove(handler)
+
 bpy.app.handlers.load_post.append(operators.load_handler)
 bpy.app.handlers.save_pre.append(operators.save_handler)
 
@@ -87,8 +94,7 @@ def unregister():
         bpy.utils.unregister_class(cls)
 
     del bpy.types.Scene.text_to_speech
-    #bpy.app.handlers.load_post.remove(operators.load_handler)
-    #bpy.app.handlers.save_pre.remove(operators.save_handler)
+
 
 
 if __name__ == '__main__':
