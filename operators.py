@@ -4,10 +4,12 @@ from pathlib import Path
 from datetime import date, datetime, timedelta
 import importlib
 import pickle
+from threading import activeCount
 
 import bpy
 from bpy.types import Operator
 from bpy_extras.io_utils import ImportHelper
+from bpy.app.handlers import persistent
 
 # append dir to path for dev, for prod use from . import module
 dir = r'/home/magag/text_to_speech'
@@ -26,11 +28,50 @@ if os.name == 'nt':
 else:
     output_dir = r'/tmp/'
 
+@persistent
+def load_handler(_scene):
+    global global_captions
+
+    print("Load handler entered")
+    if bpy.context.scene.text_to_speech.persistent_string:
+
+        context = bpy.context
+        scene = context.scene
+        seq = scene.sequence_editor
+
+        captions_raw = bpy.context.scene.text_to_speech.persistent_string.split('`')
+        for caption in captions_raw:
+            captions_split = captions_raw.split('GTTS_TEXT')
+            caption_text = captions_split[1]
+            caption_meta = captions_split[0].split('|')
+            strip_name = caption_meta[0]
+            cc_type = caption_meta[1]
+            accent = caption_meta[2]
+            name = caption_meta[3]
+            channel = caption_meta[4]
+            caption_strip = -1
+
+            for strip in seq.sequences_all:
+                if strip.name == strip_name:
+                    caption_strip = strip
+
+            if caption_strip != -1:
+
+                  # cc_type, name, text, start_time, end_time, accent, channel
+                new_cap = Caption(cc_type, name, -1,
+                        Time(0, 0, 0, 0), Time(-1, -1, -1, -1),
+                        accent, channel)
+                new_cap.sound_strip = caption_strip
+                new_cap.update_timecode()
+    else:
+        print("data not found")
+
 def remove_deleted_strips():
     global global_captions
 
     for index, caption in enumerate(global_captions):
         if not caption.sound_strip.name:
+            print(caption.sound_strip.name)
             del global_captions[index]
 
 def sort_strips_by_time():
@@ -41,7 +82,9 @@ def sort_strips_by_time():
     
     global_captions.sort(key=lambda caption: caption.current_seconds, reverse=False)
 
-def save_handler(scene):
+@persistent
+def save_handler(_scene):
+    print("Save handler entered")
     global global_captions
     remove_deleted_strips()
     sort_strips_by_time()
@@ -49,7 +92,7 @@ def save_handler(scene):
     string_to_save = ""
     for caption in global_captions:
 
-        string_to_save += f"{caption.sound_strip.name}|{caption.cc_type}|{caption.accent}|{caption.name}GTTS_TEXT{caption.text}`"
+        string_to_save += f"{caption.sound_strip.name}|{caption.cc_type}|{caption.accent}|{caption.name}|{caption.channel}GTTS_TEXT{caption.text}`"
 
     bpy.context.scene.text_to_speech.persistent_string = string_to_save
 
@@ -105,10 +148,13 @@ class Caption():
         self.frame_start = start_time.time_to_frame()
         self.channel = channel
 
-        if self.frame_start != -1:
-            self.sound_strip = tts.sound_strip_from_text(text, self.frame_start, accent, channel)
+        if text != -1:
+            if self.frame_start != -1:
+                self.sound_strip = tts.sound_strip_from_text(text, self.frame_start, accent, channel)
+            else:
+                self.sound_strip = tts.sound_strip_from_text(text, 0, accent, channel)
         else:
-            self.sound_strip = tts.sound_strip_from_text(text, 0, accent, channel)
+            self.sound_strip = ""
 
     def update_timecode(self):
         self.start_time.frame_to_time(self.sound_strip.frame_start)

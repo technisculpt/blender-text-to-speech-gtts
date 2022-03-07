@@ -72,7 +72,7 @@ classes = (
     operators.ImportTranscript,
     )
 
-
+bpy.app.handlers.load_post.append(operators.load_handler)
 bpy.app.handlers.save_pre.append(operators.save_handler)
 
 def register():
@@ -81,12 +81,14 @@ def register():
 
     bpy.types.Scene.text_to_speech = bpy.props.PointerProperty(type=ui.TextToSpeechSettings)
 
+
 def unregister():
     for cls in classes:
         bpy.utils.unregister_class(cls)
 
     del bpy.types.Scene.text_to_speech
-
+    #bpy.app.handlers.load_post.remove(operators.load_handler)
+    #bpy.app.handlers.save_pre.remove(operators.save_handler)
 
 
 if __name__ == '__main__':
