@@ -1,9 +1,10 @@
 import os
 import sys
+import time
+from datetime import timedelta
 from pathlib import Path
-from datetime import date, datetime, timedelta
 import importlib
-import pickle
+
 from threading import activeCount
 
 import bpy
@@ -454,9 +455,9 @@ class ExportFileOperator(bpy.types.Operator):
             print("exporting to .txt file")
 
             try:
-                f = open(bpy.context.scene.render.filepath + "\captions_" +  datetime.today().strftime('%Y-%m-%d') + ".txt", "x")
+                f = open(bpy.context.scene.render.filepath + "\captions_" +  time.strftime("%Y%m%d-%H%M%S") + ".txt", "x")
             except:
-                f = open(bpy.context.scene.render.filepath + "\captions_" +  datetime.today().strftime('%Y-%m-%d') + ".txt", "w")
+                f = open(bpy.context.scene.render.filepath + "\captions_" +  time.strftime("%Y%m%d-%H%M%S") + ".txt", "w")
 
             for caption in range(len(global_captions)):
 
@@ -484,9 +485,9 @@ class ExportFileOperator(bpy.types.Operator):
             print("exporting to .srt file")
             
             try:
-                f = open(bpy.context.scene.render.filepath + "\captions_" +  datetime.today().strftime('%Y-%m-%d') + ".srt", "x")
+                f = open(bpy.context.scene.render.filepath + "\captions_" +  time.strftime("%Y%m%d-%H%M%S") + ".srt", "x")
             except:
-                f = open(bpy.context.scene.render.filepath + "\captions_" +  datetime.today().strftime('%Y-%m-%d') + ".srt", "w")
+                f = open(bpy.context.scene.render.filepath + "\captions_" +  time.strftime("%Y%m%d-%H%M%S") + ".srt", "w")
 
             for caption in range(len(global_captions)):
 
@@ -528,9 +529,9 @@ class ExportFileOperator(bpy.types.Operator):
             print("exporting to .sbv file")
 
             try:
-                f = open(bpy.context.scene.render.filepath + "\captions_" +  datetime.today().strftime('%Y-%m-%d') + ".sbv", "x")
+                f = open(bpy.context.scene.render.filepath + "\captions_" +  time.strftime("%Y%m%d-%H%M%S") + ".sbv", "x")
             except:
-                f = open(bpy.context.scene.render.filepath + "\captions_" +  datetime.today().strftime('%Y-%m-%d') + ".sbv", "w")
+                f = open(bpy.context.scene.render.filepath + "\captions_" +  time.strftime("%Y%m%d-%H%M%S") + ".sbv", "w")
 
             for caption in range(len(global_captions)):
 
