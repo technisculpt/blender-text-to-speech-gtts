@@ -411,7 +411,7 @@ class TextToSpeechOperator(bpy.types.Operator):
             return {'FINISHED'}
         else:
             global_captions.append(
-                    Caption(0, '', context.scene.text_to_speech.string_field,
+                    Caption(0, context.scene.text_to_speech.string_field, context.scene.text_to_speech.string_field,
                     Time(0, 0, seconds, 0), Time(-1, -1, -1, -1),
                     context.scene.text_to_speech.accent_enumerator, 2))
 
