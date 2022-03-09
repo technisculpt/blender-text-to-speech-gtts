@@ -64,8 +64,8 @@ classes = (
     ui.TextToSpeechSettings,
     ui.TextToSpeech_PT,
     operators.TextToSpeechOperator,
-    operators.LoadFileOperator,
-    operators.ImportTranscript,
+    operators.ImportClosedCapFile,
+    operators.LoadFileButton,
     operators.ExportFileName,
     operators.ExportFileButton,
     )
