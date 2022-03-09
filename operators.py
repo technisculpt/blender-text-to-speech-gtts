@@ -33,54 +33,12 @@ if os.name == 'nt':
 else:
     output_dir = r'/tmp/'
 
-@persistent
-def load_handler(_scene):
-    global global_captions
-
-    if bpy.context.scene.text_to_speech.persistent_string:
-
-        context = bpy.context
-        scene = context.scene
-        seq = scene.sequence_editor
-
-        captions_raw = bpy.context.scene.text_to_speech.persistent_string.split('`')
-        for caption in captions_raw:
-
-            captions_split = caption.split('GTTS_TEXT')
-            caption_meta = captions_split[0].split('|')
-
-            if len(caption_meta) > 1:
-
-                #caption_text = captions_split[1] # TODO
-                strip_name = caption_meta[0]
-                cc_type = caption_meta[1]
-                accent = caption_meta[2]
-                name = caption_meta[3]
-                channel = caption_meta[4]
-                caption_strip = -1
-
-                for strip in seq.sequences_all:
-                    if strip.name == strip_name:
-                        caption_strip = strip
-
-                if caption_strip != -1:
-
-                    # cc_type, name, text, start_time, time_end, accent, channel
-                    new_cap = Caption(cc_type, name, -1,
-                            Time(0, 0, 0, 0), Time(-1, -1, -1, -1),
-                            accent, channel)
-                    new_cap.sound_strip = caption_strip
-                    new_cap.update_timecode()
-    else:
-        print("data not found")
 
 def remove_deleted_strips():
     global global_captions
-
+    
     for index, caption in enumerate(global_captions):
-        print(caption.sound_strip.name)
         if not caption.sound_strip.name:
-            print(caption.sound_strip.name)
             del global_captions[index]
 
 def sort_strips_by_time():
@@ -92,6 +50,44 @@ def sort_strips_by_time():
     global_captions.sort(key=lambda caption: caption.current_seconds, reverse=False)
 
 @persistent
+def load_handler(_scene):
+    global global_captions
+
+    if bpy.context.scene.text_to_speech.persistent_string:
+
+        context = bpy.context
+        scene = context.scene
+        seq = scene.sequence_editor
+        captions_raw = bpy.context.scene.text_to_speech.persistent_string.split('`')
+        captions_raw.pop()
+
+        for caption in captions_raw:
+
+            caption_meta = caption.split('|')
+            strip_name = caption_meta[0]
+            cc_type = caption_meta[1]
+            accent = caption_meta[2]
+            name = caption_meta[3]
+            channel = caption_meta[4]
+            caption_strip = -1
+
+            for strip in seq.sequences_all:
+                if strip.name == strip_name:
+                    caption_strip = strip
+
+            if caption_strip != -1:
+
+                # cc_type, name, text, start_time, time_end, accent, channel
+                new_cap = Caption(cc_type, name, -1,
+                        Time(0, 0, 0, 0), Time(-1, -1, -1, -1),
+                        accent, channel)
+                new_cap.sound_strip = caption_strip
+                new_cap.update_timecode()
+    else:
+        print("data not found")
+
+
+@persistent
 def save_handler(_scene):
     global global_captions
     remove_deleted_strips()
@@ -100,7 +96,7 @@ def save_handler(_scene):
     string_to_save = ""
     for caption in global_captions:
 
-        string_to_save += f"{caption.sound_strip.name}|{caption.cc_type}|{caption.accent}|{caption.name}|{caption.channel}GTTS_TEXT{caption.text}`"
+        string_to_save += f"{caption.sound_strip.name}|{caption.cc_type}|{caption.accent}|{caption.name}|{caption.channel}`"
 
     bpy.context.scene.text_to_speech.persistent_string = string_to_save
 
@@ -179,7 +175,7 @@ class TextToSpeechOperator(bpy.types.Operator):
             return {'FINISHED'}
         else:
             global_captions.append(
-                    Caption(0, context.scene.text_to_speech.string_field, context.scene.text_to_speech.string_field,
+                    Caption(0, "", context.scene.text_to_speech.string_field,
                     Time(0, 0, seconds, 0), Time(-1, -1, -1, -1),
                     context.scene.text_to_speech.accent_enumerator, 2))
 

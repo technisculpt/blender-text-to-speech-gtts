@@ -15,6 +15,7 @@ else:
     output_dir = r'/tmp/'
 
 def sound_strip_from_text(tts, start_frame, accent_enum, audio_channel):
+    
     top_level_domain = accents_domain[int(accent_enum)]
     language = accents_lang[int(accent_enum)]
 
