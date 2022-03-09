@@ -1,4 +1,3 @@
-# append dir to path for dev, for prod use from . import module
 import sys
 import os
 import bpy

@@ -1,16 +1,8 @@
 import bpy
 import os
 import sys
-import importlib
 
-# append dir to path for dev, for prod use from . import module
-dir = r'/home/magag/text_to_speech'
-if os.name == 'nt':
-    dir = r"C:\Users\marco\blender-text-to-speech"
-sys.path.append(dir)
-
-import text_to_sound as tts
-importlib.reload(tts)
+from . import text_to_sound as tts
 
 class Caption():
     def __init__(self, cc_type, name, text, start_time, end_time, accent, channel):

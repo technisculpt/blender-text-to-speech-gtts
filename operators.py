@@ -9,37 +9,22 @@ from bpy_extras.io_utils import ImportHelper, ExportHelper
 from bpy.app.handlers import persistent
 from bpy.props import StringProperty, EnumProperty, BoolProperty
 
-# append dir to path for dev, for prod use from . import module
-dir = r'/home/magag/text_to_speech'
-if os.name == 'nt':
-    dir = r"C:\Users\marco\blender-text-to-speech"
-sys.path.append(dir)
-
-import text_to_sound as tts
-importlib.reload(tts)
-import export.txt as txt_export
-importlib.reload(txt_export)
-import export.srt as srt_export
-importlib.reload(srt_export)
-import export.sbv as sbv_export
-importlib.reload(sbv_export)
-import blender_time as b_time
-importlib.reload(b_time)
-import caption as c
-importlib.reload(c)
-import imports.txt as txt_import
-importlib.reload(txt_import)
-import imports.srt as srt_import
-importlib.reload(srt_import)
-import imports.sbv as sbv_import
-importlib.reload(sbv_import)
+from . import text_to_sound as tts
+from . import blender_time as b_time
+from . import caption as c
+from .imports import txt as txt_import
+from .imports import srt as srt_import
+from .imports import sbv as sbv_import
+from .exports import txt as txt_export
+from .exports import srt as srt_export
+from .exports import sbv as sbv_export
 
 global global_captions
 global_captions = []
 
 def remove_deleted_strips():
     global global_captions
-    
+
     for index, caption in enumerate(global_captions):
         if not caption.sound_strip.name:
             del global_captions[index]

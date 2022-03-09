@@ -1,11 +1,8 @@
 import bpy
 
 class TextToSpeechSettings(bpy.types.PropertyGroup):
-
     persistent_string : bpy.props.StringProperty(name='Persistent String')
-
     string_field : bpy.props.StringProperty(name='Text')
-
     accent_enumerator : bpy.props.EnumProperty(
                 name = "",
                 description = "accent options for speakers",

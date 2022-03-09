@@ -46,19 +46,8 @@ except ModuleNotFoundError:
         except:
             print("Error installing gtts")
 
-
-# append dir to path for dev, for prod use from . import module
-dir = r'/home/magag/text_to_speech'
-if os.name == 'nt':
-    dir = r"C:\Users\marco\blender-text-to-speech"
-sys.path.append(dir)
-
-import importlib
-
-import operators
-import ui
-importlib.reload(operators)
-importlib.reload(ui)
+from . import operators
+from . import ui
 
 classes = (
     ui.TextToSpeechSettings,
@@ -96,4 +85,3 @@ def unregister():
 
 if __name__ == '__main__':
     register()
-    print("done")
