@@ -66,10 +66,9 @@ classes = (
     ui.TextToSpeech_PT,
     operators.TextToSpeechOperator,
     operators.LoadFileOperator,
-    operators.ExportFileOperator,
-    operators.ExportFileOperatorTest,
     operators.ImportTranscript,
-    operators.ExportTranscript,
+    operators.ExportFileName,
+    operators.ExportFileButton,
     )
 
 for handler in bpy.app.handlers.load_post:

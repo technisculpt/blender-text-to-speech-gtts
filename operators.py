@@ -1,11 +1,8 @@
 import os
 import sys
-import time
 from datetime import timedelta
 from pathlib import Path
 import importlib
-
-from threading import activeCount
 
 import bpy
 from bpy.types import Operator
@@ -21,6 +18,12 @@ sys.path.append(dir)
 
 import text_to_sound as tts
 importlib.reload(tts)
+import export.txt as txt_export
+importlib.reload(txt_export)
+import export.srt as srt_export
+importlib.reload(srt_export)
+import export.sbv as sbv_export
+importlib.reload(sbv_export)
 
 global global_captions
 global_captions = []
@@ -62,7 +65,7 @@ def load_handler(_scene):
 
                 if caption_strip != -1:
 
-                    # cc_type, name, text, start_time, end_time, accent, channel
+                    # cc_type, name, text, start_time, time_end, accent, channel
                     new_cap = Caption(cc_type, name, -1,
                             Time(0, 0, 0, 0), Time(-1, -1, -1, -1),
                             accent, channel)
@@ -75,6 +78,7 @@ def remove_deleted_strips():
     global global_captions
 
     for index, caption in enumerate(global_captions):
+        print(caption.sound_strip.name)
         if not caption.sound_strip.name:
             print(caption.sound_strip.name)
             del global_captions[index]
@@ -99,16 +103,6 @@ def save_handler(_scene):
         string_to_save += f"{caption.sound_strip.name}|{caption.cc_type}|{caption.accent}|{caption.name}|{caption.channel}GTTS_TEXT{caption.text}`"
 
     bpy.context.scene.text_to_speech.persistent_string = string_to_save
-
-def ensure_two_chars(number):
-    string = str(number)
-
-    if len(string) == 1:
-        return '0' + string
-    elif len(string) > 3:
-        return string[0:3]
-    else:
-        return string
 
 class Time():
     def __init__(self, hours=0, minutes=0, seconds=0, milliseconds=0):
@@ -165,6 +159,33 @@ class Caption():
         self.end_time.frame_to_time(self.sound_strip.frame_final_end)
         self.current_seconds = self.sound_strip.frame_start / bpy.context.scene.render.fps
 
+class TextToSpeechOperator(bpy.types.Operator):
+    bl_idname = 'text_to_speech.speak'
+    bl_label = 'speak op'
+    bl_options = {'INTERNAL'}
+    bl_description = "turns text into audio strip at current playhead"
+  
+    @classmethod
+    def poll(cls, context):
+        return context.object is not None
+    
+    def execute(self, context):
+        global global_captions
+        seconds = bpy.context.scene.frame_current / bpy.context.scene.render.fps
+        
+        if not context.scene.text_to_speech.string_field:
+            print("no text to convert")
+            self.report({'INFO'}, "FINISHED")
+            return {'FINISHED'}
+        else:
+            global_captions.append(
+                    Caption(0, context.scene.text_to_speech.string_field, context.scene.text_to_speech.string_field,
+                    Time(0, 0, seconds, 0), Time(-1, -1, -1, -1),
+                    context.scene.text_to_speech.accent_enumerator, 2))
+
+            self.report({'INFO'}, "FINISHED")
+            return {'FINISHED'}
+
 class ClosedCaptionSet(): # translates cc files into a list of Captions
     captions = []
     people = []
@@ -208,15 +229,6 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
                         cc_name = line[2:len(line)].split(":")[0]
                         text_tmp = line[2:len(line)].split(":")[1]
                         cc_text = text_tmp[1:len(text_tmp)]
-                        
-                        newPerson = True
-                        for person in self.people:
-                            if person == cc_name:
-                                newPerson = False
-                                break
-                        
-                        if newPerson:
-                            self.people.append(cc_name)
 
                     elif line[0] == '[': # event
                         cc_type = 2
@@ -279,15 +291,6 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
                         cc_name = line[2:len(line)].split(":")[0]
                         text_tmp = line[2:len(line)].split(":")[1]
                         cc_text = text_tmp[1:len(text_tmp)]
-                        
-                        newPerson = True
-                        for person in self.people:
-                            if person == cc_name:
-                                newPerson = False
-                                break
-                        
-                        if newPerson:
-                            self.people.append(cc_name)
 
                     elif line[0] == '[': # event
                         cc_type = 2
@@ -352,15 +355,6 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
                         cc_name = line[2:len(line)].split(":")[0]
                         text_tmp = line[2:len(line)].split(":")[1]
                         cc_text = text_tmp[1:len(text_tmp)]
-                        
-                        newPerson = True
-                        for person in self.people:
-                            if person == cc_name:
-                                newPerson = False
-                                break
-                        
-                        if newPerson:
-                            self.people.append(cc_name)
 
                     elif line[0] == '[': # event
                         cc_type = 2
@@ -392,168 +386,6 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
         else:
             print("please try .txt, .srt or .sbv file")
 
-class TextToSpeechOperator(bpy.types.Operator):
-    bl_idname = 'text_to_speech.speak'
-    bl_label = 'speak op'
-    bl_options = {'INTERNAL'}
-    bl_description = "turns text into audio strip at current playhead"
-  
-    @classmethod
-    def poll(cls, context):
-        return context.object is not None
-    
-    def execute(self, context):
-        global global_captions
-        seconds = bpy.context.scene.frame_current / bpy.context.scene.render.fps
-        
-        if not context.scene.text_to_speech.string_field:
-            print("no text to convert")
-            self.report({'INFO'}, "FINISHED")
-            return {'FINISHED'}
-        else:
-            global_captions.append(
-                    Caption(0, context.scene.text_to_speech.string_field, context.scene.text_to_speech.string_field,
-                    Time(0, 0, seconds, 0), Time(-1, -1, -1, -1),
-                    context.scene.text_to_speech.accent_enumerator, 2))
-
-            self.report({'INFO'}, "FINISHED")
-            return {'FINISHED'}
-
-
-class ExportFileOperator(bpy.types.Operator):
-    bl_idname = 'text_to_speech.export'
-    bl_label = 'load op'
-    bl_options = {'INTERNAL'}
-    bl_description = "exports closed caption file to the render filepath"
-  
-    @classmethod
-    def poll(cls, context):
-        return context.object is not None
-    
-    def execute(self, context):
-        global global_captions
-
-        remove_deleted_strips()
-        sort_strips_by_time()
-
-        mode = context.scene.text_to_speech.mode_enumerator
-        
-        if mode == '0':
-
-            print("exporting to .txt file")
-
-            try:
-                f = open(bpy.context.scene.render.filepath + "\captions_" +  time.strftime("%Y%m%d-%H%M%S") + ".txt", "x")
-            except:
-                f = open(bpy.context.scene.render.filepath + "\captions_" +  time.strftime("%Y%m%d-%H%M%S") + ".txt", "w")
-
-            for caption in range(len(global_captions)):
-
-                if global_captions[caption].cc_type == 0: # default text
-
-                    f.write(global_captions[caption].text + '\n')
-
-                elif global_captions[caption].cc_type == 1: # person
-
-                    f.write(">> " + global_captions[caption].name + ': ' + global_captions[caption].text + '\n')
-
-                elif global_captions[caption].cc_type == 2: # event
-
-                    f.write('[' + global_captions[caption].text + ']\n' )
-
-                if caption < len(global_captions):
-                    f.write('\n')
-
-            f.close()
-            self.report({'INFO'}, "FINISHED")
-            return {'FINISHED'}
-
-        elif mode == '1': # srt file
-
-            print("exporting to .srt file")
-            
-            try:
-                f = open(bpy.context.scene.render.filepath + "\captions_" +  time.strftime("%Y%m%d-%H%M%S") + ".srt", "x")
-            except:
-                f = open(bpy.context.scene.render.filepath + "\captions_" +  time.strftime("%Y%m%d-%H%M%S") + ".srt", "w")
-
-            for caption in range(len(global_captions)):
-
-                f.write(str(caption + 1) + '\n')
-
-                time_start = (ensure_two_chars(global_captions[caption].start_time.hours) + ':'
-                            + ensure_two_chars(global_captions[caption].start_time.minutes) + ':'
-                            + ensure_two_chars(global_captions[caption].start_time.seconds) + ','
-                            + ensure_two_chars(global_captions[caption].start_time.milliseconds))
-
-                time_end = (ensure_two_chars(global_captions[caption].end_time.hours) + ':'
-                        + ensure_two_chars(global_captions[caption].end_time.minutes) + ':'
-                        + ensure_two_chars(global_captions[caption].end_time.seconds) + ','
-                        + ensure_two_chars(global_captions[caption].end_time.milliseconds))
-
-                f.write(time_start + " --> " + time_end + '\n')
-
-                if global_captions[caption].cc_type == 0: # default text
-
-                    f.write(global_captions[caption].text + '\n')
-
-                elif global_captions[caption].cc_type == 1: # person
-
-                    f.write(">> " + global_captions[caption].name + ': ' + global_captions[caption].text + '\n')
-
-                elif global_captions[caption].cc_type == 2: # event
-
-                    f.write('[' + global_captions[caption].text + ']\n' )
-
-                if caption < len(global_captions):
-                    f.write('\n')
-            
-            f.close()
-            self.report({'INFO'}, "FINISHED")
-            return {'FINISHED'}
-
-        else:
-
-            print("exporting to .sbv file")
-
-            try:
-                f = open(bpy.context.scene.render.filepath + "\captions_" +  time.strftime("%Y%m%d-%H%M%S") + ".sbv", "x")
-            except:
-                f = open(bpy.context.scene.render.filepath + "\captions_" +  time.strftime("%Y%m%d-%H%M%S") + ".sbv", "w")
-
-            for caption in range(len(global_captions)):
-
-                time_start = (ensure_two_chars(str(global_captions[caption].start_time.hours)) + ':'
-                            + ensure_two_chars(str(global_captions[caption].start_time.minutes)) + ':'
-                            + ensure_two_chars(str(global_captions[caption].start_time.seconds)) + '.'
-                            + ensure_two_chars(str(global_captions[caption].start_time.milliseconds)))
-
-                time_end = (ensure_two_chars(str(global_captions[caption].end_time.hours)) + ':'
-                        + ensure_two_chars(str(global_captions[caption].end_time.minutes)) + ':'
-                        + ensure_two_chars(str(global_captions[caption].end_time.seconds)) + '.'
-                        + ensure_two_chars(str(global_captions[caption].end_time.milliseconds)))
-
-                f.write(time_start + "," + time_end + '\n')
-
-                if global_captions[caption].cc_type == 0: # default text
-
-                    f.write(global_captions[caption].text + '\n')
-
-                elif global_captions[caption].cc_type == 1: # person
-
-                    f.write(">> " + global_captions[caption].name + ': ' + global_captions[caption].text + '\n')
-
-                elif global_captions[caption].cc_type == 2: # event
-
-                    f.write('[' + global_captions[caption].text + ']\n' )
-
-                if caption < len(global_captions):
-                    f.write('\n')
-            
-            f.close()
-            self.report({'INFO'}, "FINISHED")
-            return {'FINISHED'}
-
 
 class LoadFileOperator(bpy.types.Operator):
     bl_idname = 'text_to_speech.load'
@@ -583,13 +415,48 @@ class ImportTranscript(Operator, ImportHelper):
             global_captions += ccs.return_objects()
             return {'FINISHED'}
 
-def export_cc_file(context, filepath, file_type):
-    print("running write_some_data...")
-    print(filepath, file_type)
-    return {'FINISHED'}
 
-class ExportFileOperatorTest(bpy.types.Operator):
-    bl_idname = 'text_to_speech.export2'
+def export_cc_file(context, filepath, file_type):
+    global global_captions
+    remove_deleted_strips()
+    sort_strips_by_time()
+
+    if file_type == 'txt':
+        return(txt_export.export(filepath, global_captions))
+
+    if file_type == 'srt':
+        return(srt_export.export(filepath, global_captions))
+
+    if file_type == 'sbv':
+        return(sbv_export.export(filepath, global_captions))
+
+
+class ExportFileName(Operator, ExportHelper):
+    bl_idname = "_export.cc_file"
+    bl_label = "Export CC Data"
+
+    filename_ext = ""
+    
+    type: EnumProperty(
+        name="Filetype",
+        description="Choose File Type",
+        items=(
+            ("txt", "txt", "text file"),
+            ("srt", "srt", "srt file"),
+            ("sbv", "sbv", "sbv file"),
+        ),
+        default="txt",
+    )
+
+    def execute(self, context):
+        if export_cc_file(context, self.filepath, self.type):
+            return {'FINISHED'}
+        else:
+            self.report({'INFO'}, 'File already exists.')
+            return {'CANCELLED'}
+
+class ExportFileButton(bpy.types.Operator):
+    bl_idname = 'text_to_speech.export'
     bl_label = 'export op'
     bl_options = {'INTERNAL'}
     bl_description = "exports closed caption file to a filepath"
@@ -601,23 +468,3 @@ class ExportFileOperatorTest(bpy.types.Operator):
     def execute(self, context):
         bpy.ops._export.cc_file('INVOKE_DEFAULT')
         return {'FINISHED'} 
-
-class ExportTranscript(Operator, ExportHelper):
-    bl_idname = "_export.cc_file"
-    bl_label = "Export CC Data"
-
-    filename_ext = ""
-    
-    type: EnumProperty(
-        name="Filetype",
-        description="Choose File Type",
-        items=(
-            (".txt", ".txt", "text file"),
-            (".srt", ".srt", "srt file"),
-            (".sbv", ".sbv", "sbv file"),
-        ),
-        default=".txt",
-    )
-
-    def execute(self, context):
-        return export_cc_file(context, self.filepath, self.type)

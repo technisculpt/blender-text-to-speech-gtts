@@ -6,15 +6,6 @@ class TextToSpeechSettings(bpy.types.PropertyGroup):
 
     string_field : bpy.props.StringProperty(name='Text')
 
-    '''
-    pitch : bpy.props.FloatProperty(
-        name="Pitch",
-        description="Control pitch",
-        default=1.0,
-        min=0.1,
-        max=10.0)
-    '''
-    
     accent_enumerator : bpy.props.EnumProperty(
                 name = "",
                 description = "accent options for speakers",
@@ -31,11 +22,6 @@ class TextToSpeechSettings(bpy.types.PropertyGroup):
                         ('10',"Mexico",""),
                         ('11',"Spain",""),
                         ('12',"Spain (US)","")])
-
-    mode_enumerator : bpy.props.EnumProperty(
-                    name = "",
-                    description = "export options for closed captions",
-                    items=[('0',"txt",""),('1',"srt",""),('2',"sbv","")])
 
 class TextToSpeech_PT(bpy.types.Panel):
     bl_space_type = 'SEQUENCE_EDITOR'
@@ -57,16 +43,9 @@ class TextToSpeech_PT(bpy.types.Panel):
         col = layout.column()
         col.label(text="Export Captions")
         subrow = layout.row(align=True)
-        subrow.prop(context.scene.text_to_speech, 'mode_enumerator')
-        subrow.operator('text_to_speech.export', text = 'export')
-
-        col = layout.column()
-        col.label(text="Export Captions2")
-        subrow = layout.row(align=True)
-        subrow.operator('text_to_speech.export2', text = 'export2')
+        subrow.operator('text_to_speech.export', text = 'Export Captions File')
 
         col = layout.column()
         col.label(text="Accent")
         subrow = layout.row(align=True)
         subrow.prop(context.scene.text_to_speech, 'accent_enumerator')
-        #subrow.prop(context.scene.text_to_speech, 'pitch')
