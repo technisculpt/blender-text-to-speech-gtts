@@ -9,8 +9,9 @@ from threading import activeCount
 
 import bpy
 from bpy.types import Operator
-from bpy_extras.io_utils import ImportHelper
+from bpy_extras.io_utils import ImportHelper, ExportHelper
 from bpy.app.handlers import persistent
+from bpy.props import StringProperty, EnumProperty
 
 # append dir to path for dev, for prod use from . import module
 dir = r'/home/magag/text_to_speech'
@@ -47,6 +48,7 @@ def load_handler(_scene):
 
             if len(caption_meta) > 1:
 
+                #caption_text = captions_split[1] # TODO
                 strip_name = caption_meta[0]
                 cc_type = caption_meta[1]
                 accent = caption_meta[2]
@@ -417,20 +419,6 @@ class TextToSpeechOperator(bpy.types.Operator):
             self.report({'INFO'}, "FINISHED")
             return {'FINISHED'}
 
-class LoadFileOperator(bpy.types.Operator):
-    bl_idname = 'text_to_speech.load'
-    bl_label = 'load op'
-    bl_options = {'INTERNAL'}
-    bl_description = "loads closed captions from txt, srt or sbv file"
-
-    @classmethod
-    def poll(cls, context):
-        return context.object is not None
-    
-    def execute(self, context):
-        bpy.ops._import.cc_file('INVOKE_DEFAULT')
-        self.report({'INFO'}, "done")
-        return {'FINISHED'}
 
 class ExportFileOperator(bpy.types.Operator):
     bl_idname = 'text_to_speech.export'
@@ -566,9 +554,25 @@ class ExportFileOperator(bpy.types.Operator):
             self.report({'INFO'}, "FINISHED")
             return {'FINISHED'}
 
+
+class LoadFileOperator(bpy.types.Operator):
+    bl_idname = 'text_to_speech.load'
+    bl_label = 'load op'
+    bl_options = {'INTERNAL'}
+    bl_description = "loads closed captions from txt, srt or sbv file"
+
+    @classmethod
+    def poll(cls, context):
+        return context.object is not None
+    
+    def execute(self, context):
+        bpy.ops._import.cc_file('INVOKE_DEFAULT')
+        self.report({'INFO'}, "done")
+        return {'FINISHED'}
+
 class ImportTranscript(Operator, ImportHelper):
     bl_idname = "_import.cc_file"
-    bl_label = "Import Some Data"
+    bl_label = "Import CC Data"
 
     def execute(self, context):
         global global_captions
@@ -578,3 +582,42 @@ class ImportTranscript(Operator, ImportHelper):
                 context.scene.text_to_speech.accent_enumerator)
             global_captions += ccs.return_objects()
             return {'FINISHED'}
+
+def export_cc_file(context, filepath, file_type):
+    print("running write_some_data...")
+    print(filepath, file_type)
+    return {'FINISHED'}
+
+class ExportFileOperatorTest(bpy.types.Operator):
+    bl_idname = 'text_to_speech.export2'
+    bl_label = 'export op'
+    bl_options = {'INTERNAL'}
+    bl_description = "exports closed caption file to a filepath"
+  
+    @classmethod
+    def poll(cls, context):
+        return {'FINISHED'}
+    
+    def execute(self, context):
+        bpy.ops._export.cc_file('INVOKE_DEFAULT')
+        return {'FINISHED'} 
+
+class ExportTranscript(Operator, ExportHelper):
+    bl_idname = "_export.cc_file"
+    bl_label = "Export CC Data"
+
+    filename_ext = ""
+    
+    type: EnumProperty(
+        name="Filetype",
+        description="Choose File Type",
+        items=(
+            (".txt", ".txt", "text file"),
+            (".srt", ".srt", "srt file"),
+            (".sbv", ".sbv", "sbv file"),
+        ),
+        default=".txt",
+    )
+
+    def execute(self, context):
+        return export_cc_file(context, self.filepath, self.type)

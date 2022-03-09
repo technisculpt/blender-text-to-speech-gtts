@@ -67,9 +67,10 @@ classes = (
     operators.TextToSpeechOperator,
     operators.LoadFileOperator,
     operators.ExportFileOperator,
+    operators.ExportFileOperatorTest,
     operators.ImportTranscript,
+    operators.ExportTranscript,
     )
-
 
 for handler in bpy.app.handlers.load_post:
     if handler.__name__ == 'load_handler':
@@ -87,7 +88,6 @@ def register():
         bpy.utils.register_class(cls)
 
     bpy.types.Scene.text_to_speech = bpy.props.PointerProperty(type=ui.TextToSpeechSettings)
-
 
 def unregister():
     for cls in classes:

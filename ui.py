@@ -61,6 +61,11 @@ class TextToSpeech_PT(bpy.types.Panel):
         subrow.operator('text_to_speech.export', text = 'export')
 
         col = layout.column()
+        col.label(text="Export Captions2")
+        subrow = layout.row(align=True)
+        subrow.operator('text_to_speech.export2', text = 'export2')
+
+        col = layout.column()
         col.label(text="Accent")
         subrow = layout.row(align=True)
         subrow.prop(context.scene.text_to_speech, 'accent_enumerator')
