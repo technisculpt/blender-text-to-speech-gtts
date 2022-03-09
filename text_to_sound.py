@@ -1,4 +1,3 @@
-from pathlib import Path
 from gtts import gTTS
 import os
 import time
@@ -14,10 +13,7 @@ def sound_strip_from_text(tts, start_frame, accent_enum, audio_channel):
     top_level_domain = accents_domain[int(accent_enum)]
     language = accents_lang[int(accent_enum)]
 
-    if os.name == 'nt':
-        output_name = bpy.context.scene.render.filepath + '\\' + tts + time.strftime("%Y%m%d-%H%M%S") + ".mp3"
-    else:
-        output_name = bpy.context.scene.render.filepath +  '/' + tts + time.strftime("%Y%m%d-%H%M%S") + ".mp3"
+    output_name = os.path.join(bpy.context.scene.render.filepath, f'{tts}_{time.strftime("%Y%m%d-%H%M%S")}.mp3')
 
     ttmp3 = gTTS(text=tts, lang=language, tld=top_level_domain)
     ttmp3.save(output_name)

@@ -1,6 +1,5 @@
 import os
 import sys
-from datetime import timedelta
 from pathlib import Path
 import importlib
 
@@ -24,6 +23,10 @@ import export.srt as srt_export
 importlib.reload(srt_export)
 import export.sbv as sbv_export
 importlib.reload(sbv_export)
+import blender_time as b_time
+importlib.reload(b_time)
+import caption as c
+importlib.reload(c)
 
 global global_captions
 global_captions = []
@@ -70,15 +73,14 @@ def load_handler(_scene):
                     caption_strip = strip
 
             if caption_strip != -1:
-
                 # cc_type, name, text, start_time, time_end, accent, channel
-                new_cap = Caption(cc_type, name, -1,
-                        Time(0, 0, 0, 0), Time(-1, -1, -1, -1),
+                new_cap = c.Caption(cc_type, name, -1,
+                        b_time.Time(0, 0, 0, 0), b_time.Time(-1, -1, -1, -1),
                         accent, channel)
                 new_cap.sound_strip = caption_strip
                 new_cap.update_timecode()
     else:
-        print("data not found")
+        print("caption data not found")
 
 
 @persistent
@@ -93,61 +95,6 @@ def save_handler(_scene):
         string_to_save += f"{caption.sound_strip.name}|{caption.cc_type}|{caption.accent}|{caption.name}|{caption.channel}`"
 
     bpy.context.scene.text_to_speech.persistent_string = string_to_save
-
-class Time():
-    def __init__(self, hours=0, minutes=0, seconds=0, milliseconds=0):
-        self.hours = hours
-        self.minutes = minutes
-        self.seconds = seconds
-        self.milliseconds = milliseconds
-
-    def time_to_frame(self):
-        if self.hours == -1:
-            return self.hours
-        else:
-            total_seconds = self.hours * 3600 + self.minutes * 60 + self.seconds + self.milliseconds/1000
-        return total_seconds * bpy.context.scene.render.fps
-
-    def frame_to_time(self, frames):
-        td = timedelta(seconds=(frames / bpy.context.scene.render.fps))
-        if (td.seconds/3600 >= 1):
-            self.hours = int(td.seconds/3600)
-        else:
-            self.hours = 0
-        if (td.seconds/60 >= 1):
-            self.minutes = int(td.seconds/60)
-        else:
-            self.minutes = 0
-        if (td.seconds >= 1):
-            self.seconds = int(td.seconds)
-        else:
-            self.seconds = 0
-        self.milliseconds = int(td.microseconds * 1000)
-        return
-
-class Caption():
-    def __init__(self, cc_type, name, text, start_time, end_time, accent, channel):
-        self.cc_type = cc_type # 0 : default, 1 : person, 2 : event
-        self.accent = accent
-        self.name = name
-        self.text = text
-        self.start_time = start_time
-        self.end_time = end_time
-        self.frame_start = start_time.time_to_frame()
-        self.channel = channel
-
-        if text != -1:
-            if self.frame_start != -1:
-                self.sound_strip = tts.sound_strip_from_text(text, self.frame_start, accent, channel)
-            else:
-                self.sound_strip = tts.sound_strip_from_text(text, 0, accent, channel)
-        else:
-            self.sound_strip = ""
-
-    def update_timecode(self):
-        self.start_time.frame_to_time(self.sound_strip.frame_start)
-        self.end_time.frame_to_time(self.sound_strip.frame_final_end)
-        self.current_seconds = self.sound_strip.frame_start / bpy.context.scene.render.fps
 
 class TextToSpeechOperator(bpy.types.Operator):
     bl_idname = 'text_to_speech.speak'
@@ -169,14 +116,14 @@ class TextToSpeechOperator(bpy.types.Operator):
             return {'FINISHED'}
         else:
             global_captions.append(
-                    Caption(0, "", context.scene.text_to_speech.string_field,
-                    Time(0, 0, seconds, 0), Time(-1, -1, -1, -1),
+                    c.Caption(0, "", context.scene.text_to_speech.string_field,
+                    b_time.Time(0, 0, seconds, 0), b_time.Time(-1, -1, -1, -1),
                     context.scene.text_to_speech.accent_enumerator, 2))
 
             self.report({'INFO'}, "FINISHED")
             return {'FINISHED'}
 
-class ClosedCaptionSet(): # translates cc files into a list of Captions
+class ClosedCaptionSet(): # translates cc files into a list of c.Captions
     captions = []
     people = []
 
@@ -236,13 +183,13 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
                             cc_text += " " + line
                 
                 else: # len(line == 0) equivalent of '\n'
-                    self.captions.append(Caption(cc_type, cc_name, cc_text, Time(-1, -1, -1, -1), Time(-1, -1, -1, -1), self.accent, 1))
+                    self.captions.append(c.Caption(cc_type, cc_name, cc_text, b_time.Time(-1, -1, -1, -1), b_time.Time(-1, -1, -1, -1), self.accent, 1))
                     cc_text = ""
 
                 line_counter += 1
                 if line_counter == len(self.text): # on exit
                     if len(cc_text) > 0:
-                        self.captions.append(Caption(cc_type, cc_name, cc_text, Time(-1, -1, -1, -1), Time(-1, -1, -1, -1), self.accent, 1))
+                        self.captions.append(c.Caption(cc_type, cc_name, cc_text, b_time.Time(-1, -1, -1, -1), b_time.Time(-1, -1, -1, -1), self.accent, 1))
 
             self.arrange_captions_by_time()
             
@@ -273,8 +220,8 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
                         sec_end = int(end.split(":")[2].split(',')[0])
                         ms_end = int(end.split(":")[2].split(',')[1])
 
-                        start_time = Time(hrs_start, min_start, sec_start, ms_start)
-                        end_time = Time(hrs_end, min_end, sec_end, ms_end)
+                        start_time = b_time.Time(hrs_start, min_start, sec_start, ms_start)
+                        end_time = b_time.Time(hrs_end, min_end, sec_end, ms_end)
 
                     elif line[0:2].find('>>') != -1: # person
                         cc_type = 1
@@ -299,13 +246,13 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
                             cc_text += " " + line
 
                 else: # len(line == 0) equivalent of '\n'
-                    self.captions.append(Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent, 1))
+                    self.captions.append(c.Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent, 1))
                     cc_text = ""
 
                 line_counter += 1
                 if line_counter == len(self.text): # on exit
                     if len(cc_text) > 0:
-                        self.captions.append(Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent, 1))
+                        self.captions.append(c.Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent, 1))
 
         elif self.filename[-3:len(self.filename)] == 'sbv' and self.text[0].find(',') != -1:
             
@@ -337,8 +284,8 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
                         sec_end = int(end.split(":")[2].split('.')[0])
                         ms_end = int(end.split(":")[2].split('.')[1])
 
-                        start_time = Time(hrs_start, min_start, sec_start, ms_start)
-                        end_time = Time(hrs_end, min_end, sec_end, ms_end)
+                        start_time = b_time.Time(hrs_start, min_start, sec_start, ms_start)
+                        end_time = b_time.Time(hrs_end, min_end, sec_end, ms_end)
 
                     elif line[0:2].find('>>') != -1: # person
                         cc_type = 1
@@ -363,13 +310,13 @@ class ClosedCaptionSet(): # translates cc files into a list of Captions
                             cc_text += " " + line
 
                 else: # len(line == 0) equivalent of '\n'
-                    self.captions.append(Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent, 1))
+                    self.captions.append(c.Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent, 1))
                     cc_text = ""
 
                 line_counter += 1
                 if line_counter == len(self.text): # on exit
                     if len(cc_text) > 0:
-                        self.captions.append(Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent, 1))
+                        self.captions.append(c.Caption(cc_type, cc_name, cc_text, start_time, end_time, self.accent, 1))
 
             self.file_type = 2
 
