@@ -8,7 +8,7 @@ import bpy
 from bpy.types import Operator
 from bpy_extras.io_utils import ImportHelper, ExportHelper
 from bpy.app.handlers import persistent
-from bpy.props import StringProperty, EnumProperty
+from bpy.props import StringProperty, EnumProperty, BoolProperty
 
 # append dir to path for dev, for prod use from . import module
 dir = r'/home/magag/text_to_speech'
@@ -27,12 +27,6 @@ importlib.reload(sbv_export)
 
 global global_captions
 global_captions = []
-
-if os.name == 'nt':
-    output_dir = r'C:\\tmp\\'
-else:
-    output_dir = r'/tmp/'
-
 
 def remove_deleted_strips():
     global global_captions
@@ -451,7 +445,7 @@ class ExportFileName(Operator, ExportHelper):
             self.report({'INFO'}, 'File already exists.')
             return {'CANCELLED'}
 
-class ExportFileButton(bpy.types.Operator):
+class ExportFileButton(Operator):
     bl_idname = 'text_to_speech.export'
     bl_label = 'export op'
     bl_options = {'INTERNAL'}

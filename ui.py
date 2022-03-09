@@ -32,10 +32,12 @@ class TextToSpeech_PT(bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
+        
         col = layout.column()
         col.label(text="Add Caption")
         layout.prop(context.scene.text_to_speech, 'string_field')
         layout.operator('text_to_speech.speak', text = 'Add Caption')
+
         col = layout.column()
         col.label(text="Load Captions")
         layout.operator('text_to_speech.load', text = 'Load Captions File')

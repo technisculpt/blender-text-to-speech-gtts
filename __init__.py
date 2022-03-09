@@ -47,7 +47,6 @@ except ModuleNotFoundError:
             print("Error installing gtts")
 
 
-
 # append dir to path for dev, for prod use from . import module
 dir = r'/home/magag/text_to_speech'
 if os.name == 'nt':
@@ -93,7 +92,6 @@ def unregister():
         bpy.utils.unregister_class(cls)
 
     del bpy.types.Scene.text_to_speech
-
 
 
 if __name__ == '__main__':
