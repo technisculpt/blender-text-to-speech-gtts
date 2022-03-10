@@ -7,7 +7,7 @@ bl_info = {
     "location": "SEQUENCE_EDITOR > UI > Text To Speech",
     "warning": "",
     "doc_url": "https://github.com/technisculpt/blender-gtts",
-    "support": "DEV",
+    "support": "COMMUNITY",
     "category": "Sequencer",
 }
 
@@ -59,29 +59,40 @@ classes = (
     operators.ExportFileButton,
     )
 
-for handler in bpy.app.handlers.load_post:
-    if handler.__name__ == 'load_handler':
-        bpy.app.handlers.load_post.remove(handler)
+def register_handlers():
+    for handler in bpy.app.handlers.load_post:
+        if handler.__name__ == 'load_handler':
+            bpy.app.handlers.load_post.remove(handler)
 
-for handler in bpy.app.handlers.save_pre:
-    if handler.__name__ == 'save_handler':
-        bpy.app.handlers.save_pre.remove(handler)
+    for handler in bpy.app.handlers.save_pre:
+        if handler.__name__ == 'save_handler':
+            bpy.app.handlers.save_pre.remove(handler)
 
-bpy.app.handlers.load_post.append(operators.load_handler)
-bpy.app.handlers.save_pre.append(operators.save_handler)
+    bpy.app.handlers.load_post.append(operators.load_handler)
+    bpy.app.handlers.save_pre.append(operators.save_handler)
+
+def de_register_handlers():
+    for handler in bpy.app.handlers.load_post:
+        if handler.__name__ == 'load_handler':
+            bpy.app.handlers.load_post.remove(handler)
+
+    for handler in bpy.app.handlers.save_pre:
+        if handler.__name__ == 'save_handler':
+            bpy.app.handlers.save_pre.remove(handler)
 
 def register():
     for cls in classes:
         bpy.utils.register_class(cls)
 
     bpy.types.Scene.text_to_speech = bpy.props.PointerProperty(type=ui.TextToSpeechSettings)
+    register_handlers()
 
 def unregister():
     for cls in classes:
         bpy.utils.unregister_class(cls)
 
     del bpy.types.Scene.text_to_speech
-
+    de_register_handlers()
 
 if __name__ == '__main__':
     register()

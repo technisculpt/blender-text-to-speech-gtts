@@ -5,7 +5,7 @@ import sys
 from . import text_to_sound as tts
 
 class Caption():
-    def __init__(self, cc_type, name, text, start_time, end_time, accent, channel):
+    def __init__(self, context, cc_type, name, text, start_time, end_time, accent, channel):
         self.cc_type = cc_type # 0 : default, 1 : person, 2 : event
         self.accent = accent
         self.name = name
@@ -17,9 +17,9 @@ class Caption():
 
         if text != -1:
             if self.frame_start != -1:
-                self.sound_strip = tts.sound_strip_from_text(text, self.frame_start, accent, channel)
+                self.sound_strip = tts.sound_strip_from_text(context, text, self.frame_start, accent, channel)
             else:
-                self.sound_strip = tts.sound_strip_from_text(text, 0, accent, channel)
+                self.sound_strip = tts.sound_strip_from_text(context, text, 0, accent, channel)
         else:
             self.sound_strip = ""
 

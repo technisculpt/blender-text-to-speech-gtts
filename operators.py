@@ -62,7 +62,7 @@ def load_handler(_scene):
                     caption_strip = strip
 
             if caption_strip != -1:
-                new_cap = c.Caption(cc_type, name, -1,
+                new_cap = c.Caption(context, cc_type, name, -1,
                         b_time.Time(0, 0, 0, 0), b_time.Time(-1, -1, -1, -1),
                         accent, channel)
                 new_cap.sound_strip = caption_strip
@@ -105,7 +105,7 @@ class TextToSpeechOperator(bpy.types.Operator):
         else:
 
             global_captions.append(
-                    c.Caption(0, "", context.scene.text_to_speech.string_field,
+                    c.Caption(context, 0, "", context.scene.text_to_speech.string_field,
                     b_time.Time(0, 0, seconds, 0), b_time.Time(-1, -1, -1, -1),
                     context.scene.text_to_speech.accent_enumerator, 2))
 
@@ -132,21 +132,21 @@ class ClosedCaptionSet(): # translates cc files into a list of c.Captions
  
             frame_pointer += self.captions[caption].sound_strip.frame_duration + bpy.context.scene.render.fps
 
-    def __init__(self, text, filename, accent):
+    def __init__(self, context, text, filename, accent):
         ext = filename[-3:len(filename)]
         self.finished = False
 
         if ext == 'txt':
-            self.captions = txt_import.import_cc(text, accent)
+            self.captions = txt_import.import_cc(context, text, accent)
             self.arrange_captions_by_time()
             self.finished = True
             
         elif ext == 'srt':
-            self.captions = srt_import.import_cc(text, accent)
+            self.captions = srt_import.import_cc(context, text, accent)
             self.finished = True
 
         elif ext == 'sbv':
-            self.captions = sbv_import.import_cc(text, accent)
+            self.captions = sbv_import.import_cc(context, text, accent)
             self.finished = True
 
 class ImportClosedCapFile(Operator, ImportHelper):
@@ -158,7 +158,7 @@ class ImportClosedCapFile(Operator, ImportHelper):
         f = Path(bpy.path.abspath(self.filepath))
 
         if f.exists():
-            captions =  ClosedCaptionSet(f.read_text().split("\n"), self.filepath,
+            captions =  ClosedCaptionSet(context, f.read_text().split("\n"), self.filepath,
                 context.scene.text_to_speech.accent_enumerator)
 
             if captions.finished:
