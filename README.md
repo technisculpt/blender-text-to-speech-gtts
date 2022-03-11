@@ -10,5 +10,5 @@
 
 ![alt text](https://github.com/technisculpt/blender-gtts/blob/main/ui_preview.jpg)
 
-
+### To install download the zip, change the name to "Text to Speech.zip" and install the addon via preferences menu
 ### This addon will install gtts to your Blender python interpreter
