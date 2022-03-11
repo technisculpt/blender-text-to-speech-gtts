@@ -45,7 +45,7 @@ def sort_strips_by_time():
     global_captions.sort(key=lambda caption: caption.current_seconds, reverse=False)
 
 @persistent
-def load_handler(_scene):
+def btts_load_handler(_scene):
     global global_captions
 
     if bpy.context.scene.text_to_speech.persistent_string:
@@ -78,7 +78,7 @@ def load_handler(_scene):
                 global_captions.append(new_cap)
 
 @persistent
-def save_handler(_scene):
+def btts_save_handler(_scene):
     global global_captions
     remove_deleted_strips()
     sort_strips_by_time()

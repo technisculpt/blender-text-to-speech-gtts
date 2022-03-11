@@ -61,24 +61,24 @@ classes = (
 
 def register_handlers():
     for handler in bpy.app.handlers.load_post:
-        if handler.__name__ == 'load_handler':
+        if handler.__name__ == 'btts_load_handler':
             bpy.app.handlers.load_post.remove(handler)
 
     for handler in bpy.app.handlers.save_pre:
-        if handler.__name__ == 'save_handler':
+        if handler.__name__ == 'btts_save_handler':
             bpy.app.handlers.save_pre.remove(handler)
 
-    bpy.app.handlers.load_post.append(operators.load_handler)
-    bpy.app.handlers.save_pre.append(operators.save_handler)
+    bpy.app.handlers.load_post.append(operators.btts_load_handler)
+    bpy.app.handlers.save_pre.append(operators.btts_save_handler)
 
 
 def de_register_handlers():
     for handler in bpy.app.handlers.load_post:
-        if handler.__name__ == 'load_handler':
+        if handler.__name__ == 'btts_load_handler':
             bpy.app.handlers.load_post.remove(handler)
 
     for handler in bpy.app.handlers.save_pre:
-        if handler.__name__ == 'save_handler':
+        if handler.__name__ == 'btts_save_handler':
             bpy.app.handlers.save_pre.remove(handler)
 
 def register():
