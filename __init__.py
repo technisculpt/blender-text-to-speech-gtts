@@ -1,12 +1,12 @@
 bl_info = {
-    "name": "Text To Speech",
+    "name": "Text to Speech",
     "description": "turns text into speech",
     "author": "Mark Lagana",
     "version": (1, 0),
     "blender": (2, 93, 4),
-    "location": "SEQUENCE_EDITOR > UI > Text To Speech",
+    "location": "SEQUENCE_EDITOR > UI > Text to Speech",
     "warning": "",
-    "doc_url": "https://github.com/technisculpt/blender-gtts",
+    "doc_url": "https://github.com/technisculpt/blender-text-to-speech",
     "support": "COMMUNITY",
     "category": "Sequencer",
 }
@@ -70,6 +70,7 @@ def register_handlers():
 
     bpy.app.handlers.load_post.append(operators.load_handler)
     bpy.app.handlers.save_pre.append(operators.save_handler)
+
 
 def de_register_handlers():
     for handler in bpy.app.handlers.load_post:

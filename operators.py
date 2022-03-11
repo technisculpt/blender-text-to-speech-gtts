@@ -25,8 +25,15 @@ global_captions = []
 def remove_deleted_strips():
     global global_captions
 
+    sound_strips = []
+    context = bpy.context
+    scene = context.scene
+    seq = scene.sequence_editor
+    for strip in seq.sequences_all:
+        sound_strips.append(strip.name)
+        
     for index, caption in enumerate(global_captions):
-        if not caption.sound_strip.name:
+        if caption.sound_strip.name not in sound_strips:
             del global_captions[index]
 
 def sort_strips_by_time():
@@ -51,10 +58,11 @@ def load_handler(_scene):
         for caption in captions_raw:
             caption_meta = caption.split('|')
             strip_name = caption_meta[0]
-            cc_type = caption_meta[1]
+            cc_type = int(caption_meta[1])
             accent = caption_meta[2]
             name = caption_meta[3]
-            channel = caption_meta[4]
+            channel = int(caption_meta[4])
+            strip_text = caption_meta[5]
             caption_strip = -1
 
             for strip in seq.sequences_all:
@@ -62,14 +70,12 @@ def load_handler(_scene):
                     caption_strip = strip
 
             if caption_strip != -1:
-                new_cap = c.Caption(context, cc_type, name, -1,
-                        b_time.Time(0, 0, 0, 0), b_time.Time(-1, -1, -1, -1),
-                        accent, channel)
+                new_cap = c.Caption(context, cc_type, name, strip_text,
+                        b_time.Time(-1, -1, -1, -1), b_time.Time(-1, -1, -1, -1),
+                        accent, channel, reconstruct=True)
                 new_cap.sound_strip = caption_strip
                 new_cap.update_timecode()
-    else:
-        print("caption data not found")
-
+                global_captions.append(new_cap)
 
 @persistent
 def save_handler(_scene):
@@ -79,7 +85,7 @@ def save_handler(_scene):
     string_to_save = ""
     
     for caption in global_captions:
-        string_to_save += f"{caption.sound_strip.name}|{caption.cc_type}|{caption.accent}|{caption.name}|{caption.channel}`"
+        string_to_save += f"{caption.sound_strip.name}|{caption.cc_type}|{caption.accent}|{caption.name}|{caption.channel}|{caption.text}`"
 
     bpy.context.scene.text_to_speech.persistent_string = string_to_save
 
@@ -98,17 +104,14 @@ class TextToSpeechOperator(bpy.types.Operator):
         seconds = bpy.context.scene.frame_current / bpy.context.scene.render.fps
         
         if not context.scene.text_to_speech.string_field:
-            print("no text to convert")
-            self.report({'INFO'}, "FINISHED")
+            self.report({'INFO'}, "no text to convert")
             return {'FINISHED'}
 
         else:
-
             global_captions.append(
                     c.Caption(context, 0, "", context.scene.text_to_speech.string_field,
                     b_time.Time(0, 0, seconds, 0), b_time.Time(-1, -1, -1, -1),
                     context.scene.text_to_speech.accent_enumerator, 2))
-
             self.report({'INFO'}, "FINISHED")
             return {'FINISHED'}
 

@@ -3,7 +3,6 @@ import os
 import time
 
 import bpy
-#from bpy import context
 
 accents_domain = ["com.au","co.uk","com","ca","co.in","ie","co.za","ca","fr","com.br","pt","com.mx","es","com"]
 accents_lang = ["en","en","en","en","en","en","en","fr","fr","pt","pt","es","es","es"]
