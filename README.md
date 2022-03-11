@@ -13,3 +13,4 @@
 ### To install download the zip, change the name to "Text to Speech.zip" and install the addon via preferences menu
 ### This addon will install gtts to your Blender python interpreter
 ### For windows users you will need to open Blender as administrator for install only, it may take a minute or two
+### Or you can download from the dev branch if you want to run as a script
