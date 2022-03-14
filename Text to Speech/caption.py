@@ -23,9 +23,9 @@ class Caption():
             self.sound_strip = ""
         else:
             if self.frame_start != -1:
-                self.sound_strip = tts.sound_strip_from_text(context, text, self.frame_start, accent, channel)
+                self.sound_strip, self.filename = tts.sound_strip_from_text(context, text, self.frame_start, accent, channel)
             else:
-                self.sound_strip = tts.sound_strip_from_text(context, text, 0, accent, channel)
+                self.sound_strip, self.filename = tts.sound_strip_from_text(context, text, 0, accent, channel)
             
 
     def update_timecode(self):

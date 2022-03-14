@@ -12,7 +12,8 @@ def sound_strip_from_text(context, tts, start_frame, accent_enum, audio_channel)
     top_level_domain = accents_domain[int(accent_enum)]
     language = accents_lang[int(accent_enum)]
 
-    output_name = os.path.join(bpy.context.scene.render.filepath, f'{tts}_{time.strftime("%Y%m%d-%H%M%S")}.mp3')
+    identifier = f'{tts[0:45]}{time.strftime("%Y%m%d%H%M%S")}'
+    output_name = os.path.join(bpy.context.scene.render.filepath, identifier)
 
     ttmp3 = gTTS(text=tts, lang=language, tld=top_level_domain)
     ttmp3.save(output_name)
@@ -24,6 +25,6 @@ def sound_strip_from_text(context, tts, start_frame, accent_enum, audio_channel)
     seq = _scene.sequence_editor
 
     #obj = bpy.ops.sequencer.sound_strip_add(filepath=output_name, frame_start=start_frame)
-    obj = seq.sequences.new_sound(tts, filepath=output_name, channel=audio_channel, frame_start=start_frame)
+    obj = seq.sequences.new_sound(identifier, filepath=output_name, channel=audio_channel, frame_start=start_frame)
     
-    return obj
+    return (obj, identifier)

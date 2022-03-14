@@ -41,7 +41,7 @@ def remove_deleted_strips():
         sound_strips.append(strip.name)
         
     for index, caption in enumerate(global_captions):
-        if caption.sound_strip.name not in sound_strips:
+        if caption.filename not in sound_strips:
             del global_captions[index]
 
 def sort_strips_by_time():
@@ -65,7 +65,7 @@ def btts_load_handler(_scene):
 
         for caption in captions_raw:
             caption_meta = caption.split('|')
-            strip_name = caption_meta[0]
+            filename = caption_meta[0]
             cc_type = int(caption_meta[1])
             accent = caption_meta[2]
             name = caption_meta[3]
@@ -74,7 +74,7 @@ def btts_load_handler(_scene):
             caption_strip = -1
 
             for strip in seq.sequences_all:
-                if strip.name == strip_name:
+                if strip.name == filename:
                     caption_strip = strip
 
             if caption_strip != -1:
@@ -82,6 +82,7 @@ def btts_load_handler(_scene):
                         b_time.Time(-1, -1, -1, -1), b_time.Time(-1, -1, -1, -1),
                         accent, channel, reconstruct=True)
                 new_cap.sound_strip = caption_strip
+                new_cap.filename = filename
                 new_cap.update_timecode()
                 global_captions.append(new_cap)
 
