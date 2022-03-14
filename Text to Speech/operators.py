@@ -9,7 +9,6 @@ from bpy_extras.io_utils import ImportHelper, ExportHelper
 from bpy.app.handlers import persistent
 from bpy.props import StringProperty, EnumProperty, BoolProperty
 
-from . import text_to_sound as tts
 from . import blender_time as b_time
 from . import caption as c
 from .imports import txt as txt_import
@@ -18,6 +17,15 @@ from .imports import sbv as sbv_import
 from .exports import txt as txt_export
 from .exports import srt as srt_export
 from .exports import sbv as sbv_export
+importlib.reload(b_time)
+importlib.reload(c)
+importlib.reload(txt_import)
+importlib.reload(srt_import)
+importlib.reload(sbv_import)
+importlib.reload(txt_export)
+importlib.reload(srt_export)
+importlib.reload(sbv_export)
+
 
 global global_captions
 global_captions = []
@@ -124,16 +132,18 @@ class ClosedCaptionSet(): # translates cc files into a list of c.Captions
 
     def arrange_captions_by_time(self): # when timecode not provided
         bpy.ops.sequencer.select_all(action='DESELECT')
-        frame_pointer = 0
+        frame_pointer = self.captions[0].sound_strip.frame_duration + bpy.context.scene.render.fps
+        bpy.context.scene.tool_settings.sequencer_tool_settings.overlap_mode = 'SHUFFLE'
 
-        for caption in range(len(self.captions)):
+        for caption in range(1, len(self.captions)):
+            
 
-            if caption > 0:
-                self.captions[caption].sound_strip.select = True
-                bpy.ops.transform.seq_slide(value=(frame_pointer, 0))
-                self.captions[caption].sound_strip.select = False
- 
+            self.captions[caption].sound_strip.select = True
+            bpy.ops.transform.seq_slide(value=(frame_pointer, 0.0))
+            # TODO there is a bug here where seq_slide doesn't always move the strips by frame_pointer + 1sec
+            self.captions[caption].sound_strip.select = False
             frame_pointer += self.captions[caption].sound_strip.frame_duration + bpy.context.scene.render.fps
+
 
     def __init__(self, context, text, filename, accent):
         ext = filename[-3:len(filename)]

@@ -1,10 +1,14 @@
 import sys
 import os
+import importlib
 
 import bpy
 
 from .. import blender_time as b_time
 from .. import caption as c
+importlib.reload(b_time)
+importlib.reload(c)
+
 
 def import_cc(context, text, accent):
     print(".txt file detected")

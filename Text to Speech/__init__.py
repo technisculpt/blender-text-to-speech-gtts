@@ -23,7 +23,9 @@ except ModuleNotFoundError:
     #importlib.reload(install)
     install.install()
 
+import importlib
 from . import operators
+importlib.reload(operators)
 from . import ui
 
 classes = (

@@ -10,9 +10,13 @@ class Time():
 
     def time_to_frame(self):
         if self.hours == -1:
-            return self.hours
+            return 0
         else:
-            total_seconds = self.hours * 3600 + self.minutes * 60 + self.seconds + self.milliseconds/1000
+            total_seconds = ((self.hours * 3600)
+                            + (self.minutes * 60)
+                            + self.seconds
+                            + (self.milliseconds/1000))
+                            
         return int(total_seconds * bpy.context.scene.render.fps)
 
     def frame_to_time(self, frames):

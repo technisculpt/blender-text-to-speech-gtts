@@ -1,8 +1,11 @@
+import importlib
+
 import bpy
 import os
 import sys
 
 from . import text_to_sound as tts
+importlib.reload(tts)
 
 class Caption():
     
