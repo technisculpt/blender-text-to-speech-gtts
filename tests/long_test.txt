@@ -33,3 +33,7 @@ After importing, you can move the audio strips around, delete them, and mix with
 You can then export closed caption files and it will export an updated file that corresponds to your current audio strips
 
 You can save blender, reopen and it will remember the text associated with the audio strips for further editing
+
+Thanks for watching
+
+Let me know if you have any issues!
