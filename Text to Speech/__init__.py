@@ -18,9 +18,9 @@ import bpy
 try:
     import gtts
 except ModuleNotFoundError:
-    #import importlib
+    import importlib
     from . import install
-    #importlib.reload(install)
+    importlib.reload(install)
     install.install()
 
 import importlib
