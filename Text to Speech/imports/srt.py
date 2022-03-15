@@ -12,7 +12,6 @@ def import_cc(context, text, accent, pitch):
     line_counter = 0
     cc_text = ""
     cc_type = 1
-    cc_time = 0
     start_time = 0
     end_time = 0
 
@@ -47,6 +46,9 @@ def import_cc(context, text, accent, pitch):
                 cc_name = ''
                 cc_text = line.split('[')[1].split(']')[0]
             
+            elif line.isnumeric(): # cc number
+                pass
+
             elif(len(line) > 1): # plain text line
                 
                 if len(cc_text) == 0: # no previous line
@@ -58,8 +60,9 @@ def import_cc(context, text, accent, pitch):
                     cc_text += " " + line
 
         else: # len(line == 0) equivalent of '\n'
-            captions.append(c.Caption(context, cc_type, cc_name, cc_text, start_time, end_time, accent, 1, pitch))
-            cc_text = ""
+            if len(cc_text) > 0:
+                captions.append(c.Caption(context, cc_type, cc_name, cc_text, start_time, end_time, accent, 1, pitch))
+                cc_text = ""
 
         line_counter += 1
         if line_counter == len(text): # on exit

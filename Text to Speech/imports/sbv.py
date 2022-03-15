@@ -61,8 +61,9 @@ def import_cc(context, text, accent, pitch):
                     cc_text += " " + line
 
         else: # len(line == 0) equivalent of '\n'
-            captions.append(c.Caption(context, cc_type, cc_name, cc_text, start_time, end_time, accent, 1, pitch))
-            cc_text = ""
+            if len(cc_text) > 0:
+                captions.append(c.Caption(context, cc_type, cc_name, cc_text, start_time, end_time, accent, 1, pitch))
+                cc_text = ""
 
         line_counter += 1
         if line_counter == len(text): # on exit

@@ -21,17 +21,22 @@ class Time():
 
     def frame_to_time(self, frames):
         td = timedelta(seconds=(frames / bpy.context.scene.render.fps))
+
         if (td.seconds/3600 >= 1):
             self.hours = int(td.seconds/3600)
         else:
             self.hours = 0
+
         if (td.seconds/60 >= 1):
-            self.minutes = int(td.seconds/60)
+            self.minutes = int(td.seconds/60) % 60
         else:
             self.minutes = 0
-        if (td.seconds >= 1):
-            self.seconds = int(td.seconds)
+        if (td.seconds >= 1): 
+            if (td.seconds >= 60):
+                self.seconds = td.seconds % 60
+            else:
+                self.seconds = td.seconds
         else:
             self.seconds = 0
-        self.milliseconds = int(td.microseconds * 1000)
+        self.milliseconds = int(td.microseconds / 1000) % 1000
         return

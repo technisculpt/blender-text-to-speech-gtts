@@ -32,7 +32,7 @@ global_captions = []
 
 def remove_deleted_strips():
     global global_captions
-
+    bpy.ops.sequencer.refresh_all()
     sound_strips = []
     context = bpy.context
     scene = context.scene
