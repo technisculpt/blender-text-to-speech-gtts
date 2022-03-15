@@ -27,6 +27,7 @@ import importlib
 from . import operators
 importlib.reload(operators)
 from . import ui
+importlib.reload(ui)
 
 classes = (
     ui.TextToSpeechSettings,

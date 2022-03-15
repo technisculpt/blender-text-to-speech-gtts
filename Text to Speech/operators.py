@@ -119,8 +119,11 @@ class TextToSpeechOperator(bpy.types.Operator):
         else:
             global_captions.append(
                     c.Caption(context, 0, "", context.scene.text_to_speech.string_field,
-                    b_time.Time(0, 0, seconds, 0), b_time.Time(-1, -1, -1, -1),
-                    context.scene.text_to_speech.accent_enumerator, 2))
+                        b_time.Time(0, 0, seconds, 0), b_time.Time(-1, -1, -1, -1),
+                        context.scene.text_to_speech.accent_enumerator, 2,
+                        context.scene.text_to_speech.pitch
+                        )
+                    )
             self.report({'INFO'}, "FINISHED")
             return {'FINISHED'}
 
@@ -146,21 +149,21 @@ class ClosedCaptionSet(): # translates cc files into a list of c.Captions
             frame_pointer += self.captions[caption].sound_strip.frame_duration + bpy.context.scene.render.fps
 
 
-    def __init__(self, context, text, filename, accent):
+    def __init__(self, context, text, filename, accent, pitch):
         ext = filename[-3:len(filename)]
         self.finished = False
 
         if ext == 'txt':
-            self.captions = txt_import.import_cc(context, text, accent)
+            self.captions = txt_import.import_cc(context, text, accent, pitch)
             self.arrange_captions_by_time()
             self.finished = True
             
         elif ext == 'srt':
-            self.captions = srt_import.import_cc(context, text, accent)
+            self.captions = srt_import.import_cc(context, text, accent, pitch)
             self.finished = True
 
         elif ext == 'sbv':
-            self.captions = sbv_import.import_cc(context, text, accent)
+            self.captions = sbv_import.import_cc(context, text, accent, pitch)
             self.finished = True
 
 class ImportClosedCapFile(Operator, ImportHelper):
@@ -173,7 +176,7 @@ class ImportClosedCapFile(Operator, ImportHelper):
 
         if f.exists():
             captions =  ClosedCaptionSet(context, f.read_text().split("\n"), self.filepath,
-                context.scene.text_to_speech.accent_enumerator)
+                context.scene.text_to_speech.accent_enumerator, context.scene.text_to_speech.pitch)
 
             if captions.finished:
                 global_captions += captions.get()

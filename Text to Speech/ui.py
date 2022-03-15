@@ -18,33 +18,45 @@ class TextToSpeechSettings(bpy.types.PropertyGroup):
                         ('9',"Portugal",""),
                         ('10',"Mexico",""),
                         ('11',"Spain",""),
-                        ('12',"Spain (US)","")])
+                        ('12',"Spain (US)","")]
+        )
+    pitch : bpy.props.FloatProperty(
+        name="Pitch",
+        description="Speechify pitch",
+        default=1.0,
+        min=0.1, max=10.0,
+        )
+        
 
 class TextToSpeech_PT(bpy.types.Panel):
     bl_space_type = 'SEQUENCE_EDITOR'
     bl_region_type = 'UI'
     bl_label = 'Text To Speech'
     bl_category = 'Text To Speech'
-    bl_idname = 'SEQUENCER_PT_textToSpeech'
+    bl_idname = 'SEQUENCER_PT_text_to_speech'
 
     def draw(self, context):
         layout = self.layout
+
+        col = layout.column(align=True)
+        col.use_property_split = True
+        col.prop(context.scene.text_to_speech, 'accent_enumerator', text='Accent')
         
-        col = layout.column()
-        col.label(text="Add Caption")
-        layout.prop(context.scene.text_to_speech, 'string_field')
-        layout.operator('text_to_speech.speak', text = 'Add Caption')
+        col = layout.column(align=True)
+        col.use_property_split = True
+        col.prop(context.scene.text_to_speech, 'pitch', text='Pitch')
+
+        box = layout.box()
+        col = box.column(align=True)
+        col.use_property_split = False
+        col.prop(context.scene.text_to_speech, 'string_field', text = '')
+        col.operator('text_to_speech.speak', text = 'Speechify', icon='ADD')
 
         col = layout.column()
-        col.label(text="Load Captions")
-        layout.operator('text_to_speech.load', text = 'Load Captions File')
+        layout.operator('text_to_speech.load', text = 'Load Captions File',  icon='IMPORT')
 
         col = layout.column()
-        col.label(text="Export Captions")
         subrow = layout.row(align=True)
-        subrow.operator('text_to_speech.export', text = 'Export Captions File')
+        subrow.operator('text_to_speech.export', text = 'Export Captions File', icon='EXPORT')
 
-        col = layout.column()
-        col.label(text="Accent")
-        subrow = layout.row(align=True)
-        subrow.prop(context.scene.text_to_speech, 'accent_enumerator')
+
