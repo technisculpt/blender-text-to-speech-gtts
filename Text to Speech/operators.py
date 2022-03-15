@@ -27,6 +27,7 @@ importlib.reload(sbv_import)
 importlib.reload(csv_import)
 importlib.reload(txt_export)
 importlib.reload(srt_export)
+importlib.reload(sbv_export)
 importlib.reload(csv_export)
 
 global global_captions
