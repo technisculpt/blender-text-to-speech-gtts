@@ -8,7 +8,7 @@ from . import export_helper as lib
 header = ["cc_type", "accent", "name", "text",
         "start_time_hr", "start_time_min", "start_time_sec", "start_time_ms",
         "end_time_hr", "end_time_min", "end_time_sec", "end_time_ms",
-        "channel", "pitch"]
+        "start_frame", "channel", "pitch"]
 
 def export(filepath, captions):
     try:
