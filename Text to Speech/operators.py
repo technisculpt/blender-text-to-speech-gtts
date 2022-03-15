@@ -14,18 +14,20 @@ from . import caption as c
 from .imports import txt as txt_import
 from .imports import srt as srt_import
 from .imports import sbv as sbv_import
+from .imports import csv as csv_import
 from .exports import txt as txt_export
 from .exports import srt as srt_export
 from .exports import sbv as sbv_export
+from .exports import csv as csv_export
 importlib.reload(b_time)
 importlib.reload(c)
 importlib.reload(txt_import)
 importlib.reload(srt_import)
 importlib.reload(sbv_import)
+importlib.reload(csv_import)
 importlib.reload(txt_export)
 importlib.reload(srt_export)
-importlib.reload(sbv_export)
-
+importlib.reload(csv_export)
 
 global global_captions
 global_captions = []
@@ -71,6 +73,7 @@ def btts_load_handler(_scene):
             name = caption_meta[3]
             channel = int(caption_meta[4])
             strip_text = caption_meta[5]
+            pitch = caption_meta[6]
             caption_strip = -1
 
             for strip in seq.sequences_all:
@@ -80,7 +83,7 @@ def btts_load_handler(_scene):
             if caption_strip != -1:
                 new_cap = c.Caption(context, cc_type, name, strip_text,
                         b_time.Time(-1, -1, -1, -1), b_time.Time(-1, -1, -1, -1),
-                        accent, channel, reconstruct=True)
+                        accent, channel, pitch, reconstruct=True)
                 new_cap.sound_strip = caption_strip
                 new_cap.filename = filename
                 new_cap.update_timecode()
@@ -94,7 +97,7 @@ def btts_save_handler(_scene):
     string_to_save = ""
     
     for caption in global_captions:
-        string_to_save += f"{caption.sound_strip.name}|{caption.cc_type}|{caption.accent}|{caption.name}|{caption.channel}|{caption.text}`"
+        string_to_save += f"{caption.sound_strip.name}|{caption.cc_type}|{caption.accent}|{caption.name}|{caption.channel}|{caption.text}|{caption.pitch}`"
 
     bpy.context.scene.text_to_speech.persistent_string = string_to_save
 
@@ -153,7 +156,15 @@ class ClosedCaptionSet(): # translates cc files into a list of c.Captions
         ext = filename[-3:len(filename)]
         self.finished = False
 
-        if ext == 'txt':
+        if ext == 'csv':
+            self.captions = csv_import.import_cc(context, filename)
+            if len(self.captions) > 0:
+                self.finished = True
+            else:
+                print("csv file error")
+                self.finished = False
+
+        elif ext == 'txt':
             self.captions = txt_import.import_cc(context, text, accent, pitch)
             self.arrange_captions_by_time()
             self.finished = True
@@ -164,6 +175,10 @@ class ClosedCaptionSet(): # translates cc files into a list of c.Captions
 
         elif ext == 'sbv':
             self.captions = sbv_import.import_cc(context, text, accent, pitch)
+            self.finished = True
+
+        elif ext == 'csv':
+            self.captions = csv_import.import_cc(context, text, accent, pitch)
             self.finished = True
 
 class ImportClosedCapFile(Operator, ImportHelper):
@@ -183,7 +198,7 @@ class ImportClosedCapFile(Operator, ImportHelper):
                 return {'FINISHED'}
 
             else:
-                self.report({'INFO'}, 'Please try .txt, .srt or .sbv file')
+                self.report({'INFO'}, 'Please try .txt, .srt, .sbv or csv file')
                 return {'CANCELLED'}
 
 class LoadFileButton(Operator):
@@ -214,6 +229,8 @@ def export_cc_file(context, filepath, file_type):
     if file_type == 'sbv':
         return(sbv_export.export(filepath, global_captions))
 
+    if file_type == 'csv':
+        return(csv_export.export(filepath, global_captions))
 
 class ExportFileName(Operator, ExportHelper):
     bl_idname = "_export.cc_file"
@@ -227,6 +244,7 @@ class ExportFileName(Operator, ExportHelper):
             ("txt", "txt", "text file"),
             ("srt", "srt", "srt file"),
             ("sbv", "sbv", "sbv file"),
+            ("csv", "csv", "csv file"),
         ),
         default="txt",
     )

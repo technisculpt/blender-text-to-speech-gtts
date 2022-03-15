@@ -38,5 +38,5 @@ class Time():
                 self.seconds = td.seconds
         else:
             self.seconds = 0
-        self.milliseconds = int(td.microseconds / 1000) % 1000
+        self.milliseconds = int((td.microseconds / 1000) % 1000)
         return

@@ -33,3 +33,4 @@ class Caption():
         self.start_time.frame_to_time(self.sound_strip.frame_start)
         self.end_time.frame_to_time(self.sound_strip.frame_final_end)
         self.current_seconds = self.sound_strip.frame_start / bpy.context.scene.render.fps
+        self.frame_start = self.sound_strip.frame_start
