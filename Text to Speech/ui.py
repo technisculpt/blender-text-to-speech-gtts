@@ -23,6 +23,74 @@ class TextToSpeechSettings(bpy.types.PropertyGroup):
                         ('14',"Spanish (Spain)",""),
                         ('15',"Spanish (US)","")]
         )
+
+    language_enumerator : bpy.props.EnumProperty(
+                name = "",
+                description = "accent options for speakers",
+                items=[ ('11',"English",""),
+                        ('0',"Afrikaans",""),
+                        ('1',"Arabic",""),
+                        ('2',"Bulgarian",""),
+                        ('3',"Bengali",""),
+                        ('4',"Bosnian",""),
+                        ('5',"Catalan",""),
+                        ('6',"Czech",""),
+                        ('7',"Welsh",""),
+                        ('8',"Danish",""),
+                        ('9',"German",""),
+                        ('10',"Greek",""),
+                        ('12',"Esperanto",""),
+                        ('13',"Spanish",""),
+                        ('14',"Estonian",""),
+                        ('15',"Finnish",""),
+                        ('16',"French",""),
+                        ('17',"Gujarati",""),
+                        ('18',"Hindi",""),
+                        ('19',"Croatian",""),
+                        ('20',"Hungarian",""),
+                        ('21',"Armenian",""),
+                        ('22',"Indonesian",""),
+                        ('23',"Icelandic",""),
+                        ('24',"Italian",""),
+                        ('25',"Hebrew",""),
+                        ('26',"Japanese",""),
+                        ('27',"Javanese",""),
+                        ('28',"Khmer",""),
+                        ('29',"Kannada",""),
+                        ('30',"Korean",""),
+                        ('31',"Latin",""),
+                        ('32',"Latvian",""),
+                        ('33',"Macedonian",""),
+                        ('34',"Malay",""),
+                        ('35',"Malayalam",""),
+                        ('36',"Marathi",""),
+                        ('37',"Myanmar (Burmese)",""),
+                        ('38',"Nepali",""),
+                        ('39',"Dutch",""),
+                        ('40',"Norwegian",""),
+                        ('41',"Polish",""),
+                        ('42',"Portuguese",""),
+                        ('43',"Romanian",""),
+                        ('44',"Russian",""),
+                        ('45',"Sinhala",""),
+                        ('46',"Slovak",""),
+                        ('47',"Albanian",""),
+                        ('48',"Serbian",""),
+                        ('49',"Sundanese",""),
+                        ('50',"Swedish",""),
+                        ('51',"Swahili",""),
+                        ('52',"Tamil",""),
+                        ('53',"Telugu",""),
+                        ('54',"Thai",""),
+                        ('55',"Filipino",""),
+                        ('56',"Turkish",""),
+                        ('57',"Ukrainian",""),
+                        ('58',"Urdu",""),
+                        ('59',"Vietnamese",""),
+                        ('60',"Chinese",""),
+                        ('61',"Chinese (Mandarin/Taiwan)",""),
+                        ('62',"Chinese (Mandarin)","")])
+
     pitch : bpy.props.FloatProperty(
         name="Pitch",
         description="Speechify pitch",
@@ -42,6 +110,10 @@ class TextToSpeech_PT(bpy.types.Panel):
 
         layout = self.layout
         scene = context.scene.text_to_speech
+
+        col = layout.column(align=True)
+        col.use_property_split = True
+        col.prop(scene, 'language_enumerator', text='Language')
 
         col = layout.column(align=True)
         col.use_property_split = True
