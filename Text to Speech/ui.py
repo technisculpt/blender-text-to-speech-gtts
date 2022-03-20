@@ -39,20 +39,22 @@ class TextToSpeech_PT(bpy.types.Panel):
     bl_idname = 'SEQUENCER_PT_text_to_speech'
 
     def draw(self, context):
+
         layout = self.layout
+        scene = context.scene.text_to_speech
 
         col = layout.column(align=True)
         col.use_property_split = True
-        col.prop(context.scene.text_to_speech, 'accent_enumerator', text='Accent')
+        col.prop(scene, 'accent_enumerator', text='Accent')
         
         col = layout.column(align=True)
         col.use_property_split = True
-        col.prop(context.scene.text_to_speech, 'pitch', text='Pitch')
+        col.prop(scene, 'pitch', text='Pitch')
 
         box = layout.box()
         col = box.column(align=True)
         col.use_property_split = False
-        col.prop(context.scene.text_to_speech, 'string_field', text = '')
+        col.prop(scene, 'string_field', text = '')
         col.operator('text_to_speech.speak', text = 'Speechify', icon='ADD')
 
         col = layout.column()
