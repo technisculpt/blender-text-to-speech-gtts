@@ -191,9 +191,12 @@ class ImportClosedCapFile(Operator, ImportHelper):
         f = Path(bpy.path.abspath(self.filepath))
 
         if f.exists():
+            import time
+            start = time.time()
             captions =  ClosedCaptionSet(context, f.read_text().split("\n"), self.filepath,
                 context.scene.text_to_speech.accent_enumerator, context.scene.text_to_speech.pitch)
-
+            end = time.time()
+            print(f"time taken: {end - start}")
             if captions.finished:
                 global_captions += captions.get()
                 return {'FINISHED'}
