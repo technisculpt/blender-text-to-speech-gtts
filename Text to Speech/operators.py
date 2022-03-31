@@ -150,11 +150,20 @@ class ClosedCaptionSet(): # translates cc files into a list of c.Captions
         for caption in range(1, len(self.captions)):
             
 
+<<<<<<< Updated upstream
             self.captions[caption].sound_strip.select = True
             bpy.ops.transform.seq_slide(value=(frame_pointer, 0.0))
             # TODO there is a bug here where seq_slide doesn't always move the strips by frame_pointer + 1sec
             self.captions[caption].sound_strip.select = False
             frame_pointer += self.captions[caption].sound_strip.frame_duration + bpy.context.scene.render.fps
+=======
+            if caption > 0:
+                self.captions[caption].sound_strip.select = True
+                bpy.ops.transform.seq_slide(value=(frame_pointer, 0))
+                self.captions[caption].sound_strip.select = False
+ 
+            frame_pointer += self.captions[caption].sound_strip.frame_duration
+>>>>>>> Stashed changes
 
 
     def __init__(self, context, text, filename, accent, pitch, language):
