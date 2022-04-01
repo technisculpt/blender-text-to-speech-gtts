@@ -1,14 +1,16 @@
-import sys
-import os
 from sys import platform
-import subprocess
 from pathlib import Path
+import importlib
 import bpy
 
 from .installers import osx
 from .installers import linux
 from .installers import windows
 from .installers import other
+importlib.reload(osx)
+importlib.reload(linux)
+importlib.reload(windows)
+importlib.reload(other)
 
 def install():
 

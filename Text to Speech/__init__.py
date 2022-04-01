@@ -13,17 +13,16 @@ bl_info = {
 
 from numbers import Number
 from re import T
+import importlib
 import bpy
 
 try:
     import gtts
 except ModuleNotFoundError:
-    import importlib
     from . import install
     importlib.reload(install)
     install.install()
 
-import importlib
 from . import operators
 importlib.reload(operators)
 from . import ui

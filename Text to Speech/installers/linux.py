@@ -1,9 +1,8 @@
 import subprocess
 from pathlib import Path
 import os
-import
+import sys
 import bpy
-
 
 def install():
 
