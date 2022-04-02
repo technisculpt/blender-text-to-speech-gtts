@@ -19,6 +19,7 @@ from .exports import txt as txt_export
 from .exports import srt as srt_export
 from .exports import sbv as sbv_export
 from .exports import csv as csv_export
+from . import codecs as codec_list
 importlib.reload(b_time)
 importlib.reload(c)
 importlib.reload(txt_import)
@@ -29,27 +30,30 @@ importlib.reload(txt_export)
 importlib.reload(srt_export)
 importlib.reload(sbv_export)
 importlib.reload(csv_export)
+importlib.reload(codec_list)
 
 global global_captions
 global_captions = []
 
 def remove_deleted_strips():
     global global_captions
-    bpy.ops.sequencer.refresh_all()
     sound_strips = []
     context = bpy.context
     scene = context.scene
     seq = scene.sequence_editor
+    
     for strip in seq.sequences_all:
         sound_strips.append(strip.name)
         
+    new_captions = []
     for index, caption in enumerate(global_captions):
-        if caption.filename not in sound_strips:
-            del global_captions[index]
+        if caption.filename in sound_strips:
+            new_captions.append(caption)
+
+    global_captions = new_captions
 
 def sort_strips_by_time():
     global global_captions
-    
     for caption in global_captions:
         caption.update_timecode()
     
@@ -122,7 +126,6 @@ class TextToSpeechOperator(bpy.types.Operator):
             self.report({'INFO'}, "no text to convert")
             return {'FINISHED'}
 
-        
         else:
             global_captions.append(
                     c.Caption(context, 0, "", tts_props.string_field,
@@ -149,21 +152,11 @@ class ClosedCaptionSet(): # translates cc files into a list of c.Captions
 
         for caption in range(1, len(self.captions)):
             
-
-<<<<<<< Updated upstream
             self.captions[caption].sound_strip.select = True
             bpy.ops.transform.seq_slide(value=(frame_pointer, 0.0))
             # TODO there is a bug here where seq_slide doesn't always move the strips by frame_pointer + 1sec
             self.captions[caption].sound_strip.select = False
             frame_pointer += self.captions[caption].sound_strip.frame_duration + bpy.context.scene.render.fps
-=======
-            if caption > 0:
-                self.captions[caption].sound_strip.select = True
-                bpy.ops.transform.seq_slide(value=(frame_pointer, 0))
-                self.captions[caption].sound_strip.select = False
- 
-            frame_pointer += self.captions[caption].sound_strip.frame_duration
->>>>>>> Stashed changes
 
 
     def __init__(self, context, text, filename, accent, pitch, language):
@@ -199,15 +192,24 @@ class ImportClosedCapFile(Operator, ImportHelper):
     bl_idname = "_import.cc_file"
     bl_label = "Import CC Data"
 
+    codec: EnumProperty(
+        name="File Encoding",
+        description="Choose File Encoding",
+        items = codec_list.items,
+        default='95',
+    )
+
     def execute(self, context):
         global global_captions
         f = Path(bpy.path.abspath(self.filepath))
         tts_props = context.scene.text_to_speech
 
+
         if f.exists():
             import time
             start = time.time()
-            captions =  ClosedCaptionSet(context, f.read_text().split("\n"), self.filepath,
+            enc = codec_list.items[int(self.codec)][1]
+            captions =  ClosedCaptionSet(context, f.read_text(encoding=enc).split("\n"), self.filepath,
                 tts_props.accent_enumerator, tts_props.pitch, tts_props.language_enumerator)
             end = time.time()
             print(f"time taken: {end - start}")
