@@ -1,4 +1,4 @@
-# blender-text-to-speech (in development)
+# blender-text-to-speech
 ### blender wrapper for gtts (google text to speech)
 ### make audio captions quickly
 ### options for input language, accent and pitch
