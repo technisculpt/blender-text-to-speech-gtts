@@ -15,3 +15,4 @@
 ### This addon will install gtts to your Blender python interpreter
 ### For windows users you will need to open Blender as administrator for install only, it may take a minute or two
 ### May not work on OSX for Blender versions before 3.0.1
+### this is for educational use only!
