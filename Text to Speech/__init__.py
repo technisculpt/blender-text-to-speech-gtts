@@ -21,7 +21,14 @@ try:
 except ModuleNotFoundError:
     from . import install
     importlib.reload(install)
-    install.install()
+    install.install('gtts')
+
+#try:
+#    import googletrans
+#except ModuleNotFoundError:
+#    from . import install
+#    importlib.reload(install)
+#    install.install('googletrans==3.1.0a0')
 
 from . import operators
 importlib.reload(operators)

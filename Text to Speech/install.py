@@ -12,15 +12,15 @@ importlib.reload(linux)
 importlib.reload(windows)
 importlib.reload(other)
 
-def install():
+def install(module):
 
-    print(f"attempting gtts install on {platform} blender version {bpy.app.version}")
+    print(f"attempting {module} install on {platform} blender version {bpy.app.version}")
 
     if platform.startswith("linux"):
-        linux.install()
+        linux.install(module)
     elif platform == "win32":
-        windows.install()
+        windows.install(module)
     elif platform == "darwin":
-        osx.install()
+        osx.install(module)
     else:
-        other.install()
+        other.install(module)
