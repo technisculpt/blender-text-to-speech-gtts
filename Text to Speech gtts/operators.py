@@ -37,20 +37,33 @@ global_captions = []
 
 def remove_deleted_strips():
     global global_captions
-    sound_strips = []
+
     context = bpy.context
     scene = context.scene
     seq = scene.sequence_editor
+    bpy.ops.sequencer.refresh_all()
     
-    for strip in seq.sequences_all:
-        sound_strips.append(strip.name)
-        
-    new_captions = []
-    for index, caption in enumerate(global_captions):
-        if caption.filename in sound_strips:
-            new_captions.append(caption)
+    if not len(seq.sequences_all):
+        global_captions.clear()
 
-    global_captions = new_captions
+    it = 0
+    end = len(global_captions)
+
+    while(it < end):
+
+        found = False
+        for strip in seq.sequences_all:
+            
+            if global_captions[it].filename == strip.name:
+                found = True
+                global_captions[it].sound_strip = strip
+
+        if not found:
+            del global_captions[it]
+            end -= 1
+            it -= 1
+        else:
+            it += 1
 
 def sort_strips_by_time():
     global global_captions

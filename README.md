@@ -1,6 +1,6 @@
-# blender-text-to-speech
-### this is for educational use only! For commercial purposes see the other text to speech repo
-* blender wrapper for gtts (google text to speech)
+# blender-text-to-speech-gtts
+### this is for educational use only! For commercial purposes see the [pyttsx3 text to speech addon](https://github.com/technisculpt/blender-text-to-speech)
+* blender wrapper for [gtts (google text to speech)](https://pypi.org/project/gTTS/)
 * make audio captions quickly
 * options for input language, accent and pitch
 * convert closed captions files to audio (.srt, .srb and .txt) audio strips placed at timecodes if provided
@@ -10,8 +10,11 @@
 * export generates new timecodes based on audio strips starting frames
 * caption data saved to blendfile
 
+<a href="https://www.buymeacoffee.com/marcolinilA" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+
 ![alt text](https://github.com/technisculpt/blender-gtts/blob/main/ui_preview.png)
 
+### Installation:
 * To install zip the directory "Text to Speech" and install the addon via preferences menu
 * This addon will install gtts to your Blender python interpreter
 * For windows users you will need to open Blender as administrator for install only, it may take a minute or two
