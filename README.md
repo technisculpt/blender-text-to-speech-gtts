@@ -1,5 +1,5 @@
 # blender-text-to-speech-gtts
-### this is for educational use only! For commercial purposes see the [pyttsx3 text to speech addon](https://github.com/technisculpt/blender-text-to-speech)
+### this is for educational use only! For commercial purposes see the [pyttsx3 (offline) text to speech addon](https://github.com/technisculpt/blender-text-to-speech)
 * blender wrapper for [gtts (google text to speech)](https://pypi.org/project/gTTS/)
 * make audio captions quickly
 * options for input language, accent and pitch
@@ -20,3 +20,6 @@
 * For windows users you will need to open Blender as administrator for install only, it may take a minute or two
 * May not work on OSX for Blender versions before 3.0.1
 * this is for educational use only!
+
+### Disclaimer
+This addon requires an internet connection. For offline text to speech check out the [pyttsx3 (offline) text to speech addon](https://github.com/technisculpt/blender-text-to-speech). As per the gTTS project: "This project is not affiliated with Google or Google Cloud. Breaking upstream changes can occur without notice. This project is leveraging the undocumented Google Translate speech functionality and is different from Google Cloud Text-to-Speech."
