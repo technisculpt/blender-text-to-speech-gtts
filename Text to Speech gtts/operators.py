@@ -125,11 +125,7 @@ class TextToSpeechOperator(bpy.types.Operator):
     bl_label = 'speak op'
     bl_options = {'INTERNAL'}
     bl_description = "turns text into audio strip at current playhead"
-  
-    @classmethod
-    def poll(cls, context):
-        return context.object is not None
-    
+
     def execute(self, context):
         global global_captions
         seconds = bpy.context.scene.frame_current / bpy.context.scene.render.fps
@@ -217,7 +213,6 @@ class ImportClosedCapFile(Operator, ImportHelper):
         f = Path(bpy.path.abspath(self.filepath))
         tts_props = context.scene.text_to_speech
 
-
         if f.exists():
             import time
             start = time.time()
@@ -239,10 +234,6 @@ class LoadFileButton(Operator):
     bl_label = 'load op'
     bl_options = {'INTERNAL'}
     bl_description = "loads closed captions from txt, srt or sbv file"
-
-    @classmethod
-    def poll(cls, context):
-        return context.object is not None
     
     def execute(self, context):
         bpy.ops._import.cc_file('INVOKE_DEFAULT')
@@ -296,10 +287,6 @@ class ExportFileButton(Operator):
     bl_label = 'export op'
     bl_options = {'INTERNAL'}
     bl_description = "exports closed caption file to a filepath"
-  
-    @classmethod
-    def poll(cls, context):
-        return {'FINISHED'}
     
     def execute(self, context):
         bpy.ops._export.cc_file('INVOKE_DEFAULT')
