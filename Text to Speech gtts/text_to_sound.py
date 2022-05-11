@@ -30,8 +30,15 @@ def sound_strip_from_text(context, tts, pitch, start_frame, accent_enum, audio_c
         else:
             text_ident += char
 
+    relpath = False
+    filepath_full = bpy.context.scene.render.filepath
+    if (bpy.context.scene.render.filepath[0:2] == "//"):
+        relpath = True
+        filepath_full = bpy.path.abspath(bpy.context.scene.render.filepath)
+
+
     identifier = f'{text_ident}{time.strftime("%Y%m%d%H%M%S")}'
-    output_name = os.path.join(bpy.context.scene.render.filepath, identifier)
+    output_name = os.path.join(filepath_full, identifier + ".mp3")
 
     ttmp3 = gTTS(text=tts, lang=language, tld=top_level_domain)
     ttmp3.save(output_name)
@@ -42,7 +49,12 @@ def sound_strip_from_text(context, tts, pitch, start_frame, accent_enum, audio_c
         _scene.sequence_editor_create()
     seq = _scene.sequence_editor
 
-    obj = seq.sequences.new_sound(identifier, filepath=output_name, channel=audio_channel, frame_start=start_frame)
+    if relpath:
+        obj = seq.sequences.new_sound(identifier, filepath=bpy.path.relpath(output_name), channel=audio_channel, frame_start=start_frame)
+    else:
+        obj = seq.sequences.new_sound(identifier, filepath=output_name, channel=audio_channel, frame_start=start_frame)
+
+    
     obj.pitch = pitch
     
     return (obj, identifier)
